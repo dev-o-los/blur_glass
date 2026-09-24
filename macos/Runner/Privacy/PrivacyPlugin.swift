@@ -59,11 +59,18 @@ final class PrivacyPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       runtime.clearOwner()
       result(nil)
     case "startProtection":
-      do {
-        try runtime.startProtection()
-        result(true)
-      } catch {
-        result(FlutterError(code: "start_failed", message: error.localizedDescription, details: nil))
+      // Verified flow: Touch ID/password → enroll if needed → protect.
+      runtime.enableProtection { outcome in
+        DispatchQueue.main.async {
+          switch outcome {
+          case .enabled:
+            result(true)
+          case .cancelled:
+            result(false)
+          case .failed(let message):
+            result(FlutterError(code: "start_failed", message: message, details: nil))
+          }
+        }
       }
     case "stopProtection":
       runtime.stopProtection()

@@ -8,11 +8,25 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
     self.title = "Blur Glass"
-    self.titlebarAppearsTransparent = true
-    // Dark-only app: darkAqua chrome, charcoal window background (matches
-    // BrandColors.canvas #161618).
+
+    // Liquid glass: the window is transparent and an NSVisualEffectView
+    // behind the Flutter surface blurs whatever is beneath it — the desktop
+    // wallpaper and any windows below. darkAqua keeps the material dark
+    // regardless of the system appearance (the app is dark-only).
+    let vibrancy = NSVisualEffectView(
+      frame: NSRect(origin: .zero, size: windowFrame.size)
+    )
+    vibrancy.material = .underWindowBackground
+    vibrancy.blendingMode = .behindWindow
+    vibrancy.state = .active
+    vibrancy.appearance = NSAppearance(named: .darkAqua)
+    vibrancy.autoresizingMask = [.width, .height]
+    contentView?.addSubview(vibrancy, positioned: .below, relativeTo: flutterViewController.view)
+
     self.appearance = NSAppearance(named: .darkAqua)
-    self.backgroundColor = NSColor(red: 0.086, green: 0.086, blue: 0.094, alpha: 1)
+    self.titlebarAppearsTransparent = true
+    self.isOpaque = false
+    self.backgroundColor = .clear
     self.isMovableByWindowBackground = true
     self.minSize = NSSize(width: 420, height: 560)
     self.delegate = self

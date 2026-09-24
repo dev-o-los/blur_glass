@@ -3,6 +3,13 @@ import Foundation
 import LocalAuthentication
 import Vision
 
+/// Result of the one-shot verified enable flow.
+enum EnableOutcome {
+  case enabled
+  case cancelled
+  case failed(String)
+}
+
 final class BlurGlassRuntime {
   static let shared = BlurGlassRuntime()
 
@@ -84,7 +91,7 @@ final class BlurGlassRuntime {
   func authenticateMacUser(_ completion: @escaping (Bool, String?) -> Void) {
     let context = LAContext()
     var error: NSError?
-    let reason = "Confirm you are the Mac user before Blur Glass learns your face."
+    let reason = "Confirm your identity to start Blur Glass protection."
     if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
       context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { ok, err in
         DispatchQueue.main.async {
@@ -93,6 +100,53 @@ final class BlurGlassRuntime {
       }
     } else {
       completion(true, error?.localizedDescription)
+    }
+  }
+
+  /// One-shot verified enable, used by the UI's primary action:
+  /// 1. Touch ID / password — proves the person clicking is the Mac's owner.
+  /// 2. If no face template exists yet, run enrollment right now (the camera
+  ///    turns on and face samples are captured) — only ever after the
+  ///    identity check succeeded.
+  /// 3. Start protection.
+  func enableProtection(_ completion: @escaping (EnableOutcome) -> Void) {
+    DispatchQueue.main.async { [weak self] in
+      guard let self else { return }
+      self.authenticateMacUser { ok, error in
+        guard ok else {
+          let cancelled = (error as? LAError)?.code == .userCancel || error == nil
+          completion(cancelled ? .cancelled : .failed(error ?? "Authentication failed"))
+          return
+        }
+        if self.hasOwnerTemplate {
+          do {
+            try self.startProtection()
+            completion(.enabled)
+          } catch {
+            completion(.failed(error.localizedDescription))
+          }
+          return
+        }
+        // First run: capture the owner face, then protect.
+        self.startEnrollment { result in
+          switch result {
+          case .success:
+            do {
+              try self.startProtection()
+              completion(.enabled)
+            } catch {
+              completion(.failed(error.localizedDescription))
+            }
+          case .failure(let enrollError):
+            let nsError = enrollError as NSError
+            if nsError.domain == "BlurGlass" && nsError.code == 12 {
+              completion(.cancelled)
+            } else {
+              completion(.failed(enrollError.localizedDescription))
+            }
+          }
+        }
+      }
     }
   }
 

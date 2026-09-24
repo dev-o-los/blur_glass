@@ -215,22 +215,16 @@ class _PrimaryAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final protecting = state != null && state!.state != 'idle';
-    final hasTemplate = controller.currentHasTemplate;
-
-    if (!hasTemplate) {
-      return FilledButton.icon(
-        style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
-        onPressed: controller.redoOnboarding,
-        icon: const Icon(Icons.face_retouching_natural_rounded, size: 16),
-        label: const Text('Set up face recognition'),
-      );
-    }
+    final enrolling = state?.state == 'enrolling';
+    final protecting = state != null && state!.state != 'idle' && !enrolling;
 
     return FilledButton.icon(
       style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
-      onPressed:
-          protecting ? controller.stopProtection : controller.startProtection,
+      onPressed: enrolling
+          ? null // enrollment in progress; cancel happens on the wizard
+          : protecting
+              ? controller.stopProtection
+              : controller.startProtection, // verified enable flow
       icon: Icon(
         protecting ? Icons.pause_rounded : Icons.play_arrow_rounded,
         size: 18,
@@ -252,7 +246,7 @@ class _StatusStrip extends StatelessWidget {
     final ownerMatch = s?.ownerMatch ?? false;
     return Container(
       decoration: BoxDecoration(
-        color: BrandColors.surface,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: BrandColors.hairline),
       ),
@@ -339,7 +333,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: BrandColors.surfaceRaised,
+      backgroundColor: const Color(0xF0232326),
       elevation: 24,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),

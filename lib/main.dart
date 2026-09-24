@@ -90,7 +90,7 @@ class _Splash extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: BrandColors.canvas,
+      backgroundColor: Colors.transparent,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

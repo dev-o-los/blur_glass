@@ -403,6 +403,30 @@ class _HowItWorksStep extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: BrandColors.neutralTint,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: BrandColors.hairline),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.face_outlined,
+                    size: 18, color: BrandColors.textSecondary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'One-time face enrollment is required. It is how Blur '
+                    'Glass tells you apart from everyone else — without it, '
+                    'protection cannot run.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -484,8 +508,9 @@ class _CameraStep extends StatelessWidget {
                     Text(
                       switch (status) {
                         'authorized' =>
-                          'macOS has granted Blur Glass camera access. '
-                              'Continue to the final step.',
+                          'Camera is ready. Next: a one-time face check so '
+                              'Blur Glass can recognize you — this is '
+                              'required before protection can start.',
                         'denied' || 'restricted' =>
                           'Camera access was declined for this app. You can '
                               'turn it back on in System Settings › Privacy & '
@@ -607,7 +632,9 @@ class _VerifyIntro extends StatelessWidget {
           Text('Verify it\'s you', style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 6),
           Text(
-            'Two quick checks, about twenty seconds.',
+            'Required before protection can start — Blur Glass must learn '
+            'your face to tell you apart from a stranger. Two quick checks, '
+            'about twenty seconds.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 24),

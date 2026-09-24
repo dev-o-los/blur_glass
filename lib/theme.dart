@@ -89,7 +89,9 @@ class BlurGlassTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: BrandColors.canvas,
+      // Transparent: the native NSVisualEffectView behind the Flutter surface
+      // provides the liquid-glass backdrop (wallpaper blurred through).
+      scaffoldBackgroundColor: Colors.transparent,
       splashFactory: InkSparkle.splashFactory,
       typography: Typography.material2021(platform: TargetPlatform.macOS),
       textTheme: _textTheme(),
@@ -223,7 +225,8 @@ class BlurGlassTheme {
   }
 }
 
-/// A raised charcoal surface with a hairline border — the base container.
+/// A raised glass surface: translucent white over the native vibrancy,
+/// with a hairline border — the base container.
 class Panel extends StatelessWidget {
   const Panel({
     super.key,
@@ -239,7 +242,7 @@ class Panel extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: BrandColors.surface,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: BrandColors.hairline),
       ),
