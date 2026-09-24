@@ -1,6 +1,6 @@
 import AppKit
 
-/// Full-desktop frost above Safari, YouTube, and every other app — not the Flutter window.
+/// Full-desktop frost above every app, Space, and the menu bar — not the Flutter window.
 final class ScreenShieldController {
   static let shared = ScreenShieldController()
 
@@ -24,13 +24,7 @@ final class ScreenShieldController {
       self.rebuildIfNeeded()
       for window in self.windows.values {
         window.updateCopy(reason)
-        if on {
-          window.ignoresMouseEvents = false
-          window.orderFrontRegardless()
-        } else {
-          window.ignoresMouseEvents = true
-          window.orderOut(nil)
-        }
+        window.setShielded(on, animated: true)
       }
     }
   }
@@ -66,9 +60,15 @@ private final class ShieldWindow: NSPanel {
   private let titleLabel = NSTextField(labelWithString: "Blur Glass")
   private let detailLabel = NSTextField(labelWithString: "")
 
+  /// Fade timings (seconds).
+  private let fadeInDuration: TimeInterval = 0.28
+  private let fadeOutDuration: TimeInterval = 0.38
+
+  private var shielded = false
+
   convenience init(screen: NSScreen) {
     self.init(
-      contentRect: Self.shieldFrame(for: screen),
+      contentRect: screen.frame,
       styleMask: [.borderless, .nonactivatingPanel],
       backing: .buffered,
       defer: false
@@ -80,12 +80,49 @@ private final class ShieldWindow: NSPanel {
   override var canBecomeKey: Bool { false }
   override var canBecomeMain: Bool { false }
 
+  /// Full screen frame — menu bar and notch included, nothing left uncovered.
   func reposition(on screen: NSScreen) {
-    setFrame(Self.shieldFrame(for: screen), display: true)
+    setFrame(screen.frame, display: true)
   }
 
   func updateCopy(_ reason: String) {
     detailLabel.stringValue = reason
+  }
+
+  /// Fades the frost in/out. Repeat calls with the same state are no-ops,
+  /// so the engine can push snapshots every frame without restarting animations.
+  func setShielded(_ on: Bool, animated: Bool) {
+    if on == shielded {
+      if on { orderFrontRegardless() }
+      return
+    }
+    shielded = on
+    ignoresMouseEvents = !on
+
+    guard animated else {
+      alphaValue = on ? 1 : 0
+      if on { orderFrontRegardless() } else { orderOut(nil) }
+      return
+    }
+
+    NSAnimationContext.runAnimationGroup({ context in
+      context.duration = on ? fadeInDuration : fadeOutDuration
+      context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+      context.allowsImplicitAnimation = false
+      if on {
+        // Start fully transparent so the first ordered-front frame is blank,
+        // then fade up. No readable flash frame.
+        alphaValue = 0
+        orderFrontRegardless()
+      }
+      animator().alphaValue = on ? 1 : 0
+    }, completionHandler: {
+      // A newer toggle may have flipped the state mid-animation.
+      if !self.shielded {
+        self.orderOut(nil)
+        self.alphaValue = 1
+      }
+    })
   }
 
   private func configure() {
@@ -100,6 +137,7 @@ private final class ShieldWindow: NSPanel {
     sharingType = .none
     animationBehavior = .none
     isReleasedWhenClosed = false
+    alphaValue = 0
 
     effect.material = .hudWindow
     effect.blendingMode = .behindWindow
@@ -128,13 +166,5 @@ private final class ShieldWindow: NSPanel {
       detailLabel.leadingAnchor.constraint(greaterThanOrEqualTo: effect.leadingAnchor, constant: 40),
       detailLabel.trailingAnchor.constraint(lessThanOrEqualTo: effect.trailingAnchor, constant: -40),
     ])
-  }
-
-  /// Leave the menu bar uncovered so Pause still works while frosted.
-  private static func shieldFrame(for screen: NSScreen) -> NSRect {
-    var frame = screen.frame
-    let menu: CGFloat = (screen == NSScreen.screens.first) ? 24 : 0
-    frame.size.height -= menu
-    return frame
   }
 }

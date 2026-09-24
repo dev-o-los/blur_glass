@@ -5,35 +5,33 @@ import 'package:flutter/material.dart';
 import 'privacy_controller.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'theme.dart';
 
 void main() {
   runApp(const BlurGlassApp());
 }
 
 class BlurGlassApp extends StatelessWidget {
-  const BlurGlassApp({super.key});
+  const BlurGlassApp({super.key, this.controller});
+
+  /// Injectable for tests; a real controller is created when omitted.
+  final PrivacyController? controller;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Blur Glass',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.transparent,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF3DDAD7),
-          brightness: Brightness.dark,
-        ),
-      ),
-      home: const _Root(),
+      theme: BlurGlassTheme.dark(),
+      home: _Root(controller: controller),
     );
   }
 }
 
 class _Root extends StatefulWidget {
-  const _Root();
+  const _Root({this.controller});
+
+  final PrivacyController? controller;
 
   @override
   State<_Root> createState() => _RootState();
@@ -45,7 +43,7 @@ class _RootState extends State<_Root> {
   @override
   void initState() {
     super.initState();
-    _controller = PrivacyController();
+    _controller = widget.controller ?? PrivacyController();
     unawaited(_controller.init());
     _controller.errors.listen((message) {
       if (!mounted) return;
@@ -66,31 +64,22 @@ class _RootState extends State<_Root> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0B1220), Color(0xFF101826), Color(0xFF14243A)],
-        ),
-      ),
-      child: StreamBuilder<AppPhase>(
-        stream: _controller.phase,
-        initialData: _controller.currentPhase,
-        builder: (context, snapshot) {
-          final phase = snapshot.data ?? AppPhase.loading;
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            child: switch (phase) {
-              AppPhase.dashboard => DashboardScreen(
-                  key: const ValueKey('dashboard'), controller: _controller),
-              AppPhase.onboarding => OnboardingScreen(
-                  key: const ValueKey('onboarding'), controller: _controller),
-              AppPhase.loading => const _Splash(key: ValueKey('splash')),
-            },
-          );
-        },
-      ),
+    return StreamBuilder<AppPhase>(
+      stream: _controller.phase,
+      initialData: _controller.currentPhase,
+      builder: (context, snapshot) {
+        final phase = snapshot.data ?? AppPhase.loading;
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: switch (phase) {
+            AppPhase.dashboard => DashboardScreen(
+                key: const ValueKey('dashboard'), controller: _controller),
+            AppPhase.onboarding => OnboardingScreen(
+                key: const ValueKey('onboarding'), controller: _controller),
+            AppPhase.loading => const _Splash(key: ValueKey('splash')),
+          },
+        );
+      },
     );
   }
 }
@@ -100,15 +89,24 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Colors.transparent,
+    return Scaffold(
+      backgroundColor: BrandColors.canvas,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.blur_on_rounded, size: 48, color: Colors.white70),
-            SizedBox(height: 12),
-            Text('Connecting to the Blur Glass agent…'),
+            const BrandMark(size: 64),
+            const SizedBox(height: 20),
+            Text(
+              'Connecting to the Blur Glass agent…',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
           ],
         ),
       ),

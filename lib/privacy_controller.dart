@@ -12,7 +12,14 @@ enum AppPhase { loading, onboarding, dashboard }
 /// same event channel), and re-checks permission state on resume.
 class PrivacyController {
   PrivacyController({PrivacyChannel? channel})
-      : _channel = channel ?? PrivacyChannel();
+      : _channel = channel ?? PrivacyChannel() {
+    _instance = this;
+  }
+
+  static PrivacyController? _instance;
+
+  /// App-wide instance, for dialogs created outside the widget tree.
+  static PrivacyController? get instance => _instance;
 
   final PrivacyChannel _channel;
 
@@ -25,6 +32,8 @@ class PrivacyController {
   AppPhase _currentPhase = AppPhase.loading;
   String _currentPermission = 'notDetermined';
   bool _currentEnrollment = false;
+  bool _hasTemplate = false;
+  bool _onboardingDone = false;
   AttentionSnapshot? _currentSnapshot;
 
   Stream<AppPhase> get phase => _phase.stream;
@@ -36,6 +45,7 @@ class PrivacyController {
   AppPhase get currentPhase => _currentPhase;
   String get currentPermission => _currentPermission;
   bool get currentEnrollment => _currentEnrollment;
+  bool get currentHasTemplate => _hasTemplate;
   AttentionSnapshot? get currentSnapshot => _currentSnapshot;
 
   StreamSubscription<AttentionSnapshot>? _snapshotSub;
@@ -53,10 +63,17 @@ class PrivacyController {
       final hasTemplate = await _channel.hasOwnerTemplate();
       final protecting = await _channel.isProtecting();
       _currentPermission = permission;
+      _hasTemplate = hasTemplate;
+      // A stored template means setup completed at some point.
+      if (hasTemplate) {
+        _onboardingDone = true;
+      }
       if (!_permission.isClosed) {
         _permission.add(permission);
       }
-      _setPhase(hasTemplate || protecting ? AppPhase.dashboard : AppPhase.onboarding);
+      _setPhase(hasTemplate || protecting || _onboardingDone
+          ? AppPhase.dashboard
+          : AppPhase.onboarding);
     } on OwnerEnrollmentException catch (e) {
       if (!_errors.isClosed) {
         _errors.add(e.message);
@@ -159,6 +176,19 @@ class PrivacyController {
     await _refresh();
   }
 
+  /// Called when the user finishes the onboarding wizard; keeps them on the
+  /// dashboard even if no template exists yet (e.g. camera skipped).
+  void finishOnboarding() {
+    _onboardingDone = true;
+    _setPhase(AppPhase.dashboard);
+  }
+
+  /// Re-opens the setup wizard without deleting anything (used when no
+  /// template exists yet, e.g. the user skipped camera setup).
+  void redoOnboarding() {
+    _setPhase(AppPhase.onboarding);
+  }
+
   Future<void> startProtection() async {
     try {
       await _channel.startProtection();
@@ -201,6 +231,9 @@ class PrivacyController {
         _errors.add(e.toString());
       }
     }
+    // Deliberately clearing the owner drops the user back into setup.
+    _onboardingDone = false;
+    _hasTemplate = false;
     await _refresh();
   }
 
@@ -237,6 +270,9 @@ class PrivacyController {
   }
 
   Future<void> dispose() async {
+    if (_instance == this) {
+      _instance = null;
+    }
     await _snapshotSub?.cancel();
     await _phase.close();
     await _permission.close();

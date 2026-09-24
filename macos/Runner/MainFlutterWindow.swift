@@ -8,6 +8,12 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
     self.title = "Blur Glass"
+    self.titlebarAppearsTransparent = true
+    // Dark-only app: darkAqua chrome, charcoal window background (matches
+    // BrandColors.canvas #161618).
+    self.appearance = NSAppearance(named: .darkAqua)
+    self.backgroundColor = NSColor(red: 0.086, green: 0.086, blue: 0.094, alpha: 1)
+    self.isMovableByWindowBackground = true
     self.minSize = NSSize(width: 420, height: 560)
     self.delegate = self
 
