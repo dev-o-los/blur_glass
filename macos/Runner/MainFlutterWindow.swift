@@ -25,16 +25,61 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
 
     self.appearance = NSAppearance(named: .darkAqua)
     self.titlebarAppearsTransparent = true
+    // Frameless look: the Flutter sidebar paints flush behind the traffic
+    // lights, exactly like the product mock.
+    self.titleVisibility = .hidden
+    self.styleMask.insert(.fullSizeContentView)
     self.isOpaque = false
     self.backgroundColor = .clear
     self.isMovableByWindowBackground = true
-    self.minSize = NSSize(width: 420, height: 560)
+    self.minSize = NSSize(width: 640, height: 520)
     self.delegate = self
+
+    // --- Transparent Flutter surface -------------------------------------
+    // FlutterView reports isOpaque == true, which tells AppKit to composite
+    // its metal surface WITHOUT alpha — a black rectangle that hides any
+    // vibrancy behind it. Clearing the layer is not enough; the view-level
+    // opaque flag must go. Replace the isOpaque implementation on the
+    // Flutter view's runtime class only (safe: no global swizzling).
+    makeFlutterSurfaceTransparent(flutterViewController.view)
+    if let layer = flutterViewController.view.layer {
+      layer.isOpaque = false
+      layer.backgroundColor = NSColor.clear.cgColor
+    }
+    // Some Flutter versions host the metal surface in a sublayer; clear those
+    // too so nothing paints as an opaque black plane.
+    clearOpaqueMetalLayers(flutterViewController.view.layer)
+    contentView?.layer?.backgroundColor = NSColor.clear.cgColor
+    // ----------------------------------------------------------------------
 
     RegisterGeneratedPlugins(registry: flutterViewController)
     PrivacyPlugin.register(with: flutterViewController.registrar(forPlugin: "PrivacyPlugin"))
 
     super.awakeFromNib()
+  }
+
+  /// Replaces `-[<FlutterView class> isOpaque]` with an implementation that
+  /// returns false. Uses the view's actual runtime class, so this works even
+  /// if Flutter renames the class in a future release.
+  private func makeFlutterSurfaceTransparent(_ view: NSView) {
+    guard let viewClass = object_getClass(view) else { return }
+    let opaqueSelector = #selector(getter: NSView.isOpaque)
+    guard let method = class_getInstanceMethod(viewClass, opaqueSelector) else { return }
+    let transparentImp = imp_implementationWithBlock(
+      { (_: AnyObject) -> Bool in false } as @convention(block) (AnyObject) -> Bool
+    )
+    method_setImplementation(method, transparentImp)
+  }
+
+  private func clearOpaqueMetalLayers(_ layer: CALayer?) {
+    guard let layer else { return }
+    if layer is CAMetalLayer {
+      layer.isOpaque = false
+      layer.backgroundColor = NSColor.clear.cgColor
+    }
+    for sublayer in layer.sublayers ?? [] {
+      clearOpaqueMetalLayers(sublayer)
+    }
   }
 
   func windowShouldClose(_ sender: NSWindow) -> Bool {

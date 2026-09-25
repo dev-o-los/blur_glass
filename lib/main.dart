@@ -95,8 +95,11 @@ class _Splash extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const BrandMark(size: 64),
-            const SizedBox(height: 20),
+            HaloRings(
+              size: 132,
+              child: const BrandMark(size: 56),
+            ),
+            const SizedBox(height: 24),
             Text(
               'Connecting to the Blur Glass agent…',
               style: Theme.of(context).textTheme.bodyMedium,

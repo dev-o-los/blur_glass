@@ -5,15 +5,21 @@ import 'attention_snapshot.dart';
 /// Blur Glass palette — dark mode only.
 ///
 /// Charcoal surfaces, white primary text, muted gray secondary text,
-/// macOS system blue as the single accent. No neon, no glow.
+/// macOS system blue as the single accent.
 abstract final class BrandColors {
   // macOS system blue (dark appearance).
   static const blue = Color(0xFF0A84FF);
+
+  // Lighter blue for selected sidebar labels on tinted fills.
+  static const blueBright = Color(0xFF6DB2FF);
 
   // Backgrounds — near-black canvas, raised charcoal surfaces.
   static const canvas = Color(0xFF161618);
   static const surface = Color(0xFF232326);
   static const surfaceRaised = Color(0xFF2C2C2F);
+
+  // Deep navy core of the protection halo.
+  static const heroCore = Color(0xFF0B1A2E);
 
   // Text hierarchy.
   static const textPrimary = Color(0xFFF5F5F7);
@@ -35,6 +41,12 @@ abstract final class BrandColors {
   static const amberTint = Color(0xFF2E2A1C);
   static const redTint = Color(0xFF32211F);
   static const neutralTint = Color(0xFF2A2A2E);
+
+  /// The brand-mark gradient, mirrored by the macOS app icon.
+  static const markGradient = [
+    Color(0xFF33A0FF),
+    Color(0xFF0A72F0),
+  ];
 }
 
 /// Maps a snapshot tone to its restrained accent color.
@@ -43,7 +55,7 @@ Color toneColor(SnapshotTone tone) => switch (tone) {
       SnapshotTone.warning => BrandColors.amber,
       SnapshotTone.danger => BrandColors.red,
       SnapshotTone.info => BrandColors.blue,
-      SnapshotTone.neutral => BrandColors.textSecondary,
+      SnapshotTone.neutral => BrandColors.blueBright,
     };
 
 /// Very low-chroma tint for a tone (icon chips only).
@@ -251,8 +263,40 @@ class Panel extends StatelessWidget {
   }
 }
 
-/// The app mark: a rounded blue square with the blur glyph.
-/// Rendered flat — no glow, no gradient.
+/// Paints the white dot grid (iris) inside the blue brand mark.
+class _DottedGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.white;
+    final center = Offset(size.width / 2, size.height / 2);
+    final u = size.shortestSide; // unit scale
+
+    void dot(Offset c, double r) => canvas.drawCircle(c, r * u, paint);
+
+    // Center dot.
+    dot(center, 0.08);
+
+    // Inner ring of eight dots.
+    for (var i = 0; i < 8; i++) {
+      final angle = -90.0 + i * 45.0;
+      final c = center + Offset.fromDirection(angle * 3.14159265 / 180, 0.24 * u);
+      dot(c, 0.055);
+    }
+
+    // Four small outer dots on the diagonals — the "iris" sparkle.
+    for (final angleDeg in const [45.0, 135.0, 225.0, 315.0]) {
+      final c =
+          center + Offset.fromDirection(angleDeg * 3.14159265 / 180, 0.375 * u);
+      dot(c, 0.032);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// The app mark: a rounded blue square (Apple-squircle radius) with the
+/// white dotted iris. Matches the macOS app icon.
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 40});
 
@@ -264,13 +308,85 @@ class BrandMark extends StatelessWidget {
       width: size,
       height: size,
       decoration: const BoxDecoration(
-        color: BrandColors.blue,
-        borderRadius: BorderRadius.all(Radius.circular(9)),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: BrandColors.markGradient,
+        ),
+        borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
-      child: Icon(
-        Icons.blur_on_rounded,
-        size: size * 0.62,
-        color: Colors.white,
+      child: CustomPaint(painter: _DottedGridPainter()),
+    );
+  }
+}
+
+/// The protection halo: soft outer glow, a faint ring, and a crisp
+/// blue ring around a deep navy core holding the state glyph.
+class HaloRings extends StatelessWidget {
+  const HaloRings({
+    super.key,
+    required this.child,
+    this.size = 224,
+    this.accent = BrandColors.blue,
+  });
+
+  final Widget child;
+  final double size;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Soft radial glow behind everything.
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  accent.withValues(alpha: 0.16),
+                  accent.withValues(alpha: 0.05),
+                  Colors.transparent,
+                ],
+                stops: const [0.5, 0.78, 1.0],
+              ),
+            ),
+          ),
+          // Faint outer ring.
+          Container(
+            width: size * 0.97,
+            height: size * 0.97,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: accent.withValues(alpha: 0.12)),
+            ),
+          ),
+          // Crisp blue ring around the navy core.
+          Container(
+            width: size * 0.68,
+            height: size * 0.68,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: BrandColors.heroCore,
+              border: Border.all(color: accent, width: 5),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.35),
+                  blurRadius: 32,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: child,
+          ),
+        ],
       ),
     );
   }
