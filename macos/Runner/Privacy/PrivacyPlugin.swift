@@ -81,6 +81,28 @@ final class PrivacyPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       result(true)
     case "isProtecting":
       result(runtime.isProtecting)
+    case "hasEmergencyPassword":
+      result(runtime.hasEmergencyPassword)
+    case "setEmergencyPassword":
+      if let password = call.arguments as? String {
+        do {
+          try runtime.setEmergencyPassword(password)
+          result(true)
+        } catch {
+          result(FlutterError(code: "set_password_failed", message: error.localizedDescription, details: nil))
+        }
+      } else {
+        result(FlutterError(code: "invalid_argument", message: "Password must be a string", details: nil))
+      }
+    case "verifyEmergencyPassword":
+      if let password = call.arguments as? String {
+        result(runtime.verifyEmergencyPassword(password))
+      } else {
+        result(false)
+      }
+    case "clearEmergencyPassword":
+      runtime.clearEmergencyPassword()
+      result(true)
     case "setConfig":
       if let map = call.arguments as? [String: Any] {
         runtime.applyConfig(map)

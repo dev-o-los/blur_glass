@@ -59,6 +59,7 @@ private final class ShieldWindow: NSPanel {
   private let effect = NSVisualEffectView()
   private let titleLabel = NSTextField(labelWithString: "Blur Glass")
   private let detailLabel = NSTextField(labelWithString: "")
+  private let emergencyExitButton = NSButton()
 
   /// Fade timings (seconds).
   private let fadeInDuration: TimeInterval = 0.28
@@ -156,8 +157,32 @@ private final class ShieldWindow: NSPanel {
     detailLabel.alignment = .center
     detailLabel.translatesAutoresizingMaskIntoConstraints = false
 
+    emergencyExitButton.title = " Emergency Exit"
+    if #available(macOS 11.0, *) {
+      let config = NSImage.SymbolConfiguration(pointSize: 13, weight: .semibold)
+      emergencyExitButton.image = NSImage(
+        systemSymbolName: "lock.shield",
+        accessibilityDescription: "Emergency Exit"
+      )?.withSymbolConfiguration(config)
+      emergencyExitButton.imagePosition = .imageLeading
+    }
+    emergencyExitButton.bezelStyle = .regularSquare
+    emergencyExitButton.isBordered = false
+    emergencyExitButton.wantsLayer = true
+    emergencyExitButton.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.55).cgColor
+    emergencyExitButton.layer?.cornerRadius = 18
+    emergencyExitButton.layer?.borderWidth = 1.2
+    emergencyExitButton.layer?.borderColor = NSColor(red: 1.0, green: 0.35, blue: 0.35, alpha: 0.7).cgColor
+    emergencyExitButton.contentTintColor = NSColor(red: 1.0, green: 0.5, blue: 0.5, alpha: 1.0)
+    emergencyExitButton.font = .systemFont(ofSize: 13, weight: .semibold)
+    emergencyExitButton.target = self
+    emergencyExitButton.action = #selector(onEmergencyExitClicked)
+    emergencyExitButton.translatesAutoresizingMaskIntoConstraints = false
+
     effect.addSubview(titleLabel)
     effect.addSubview(detailLabel)
+    effect.addSubview(emergencyExitButton)
+
     NSLayoutConstraint.activate([
       titleLabel.centerXAnchor.constraint(equalTo: effect.centerXAnchor),
       titleLabel.centerYAnchor.constraint(equalTo: effect.centerYAnchor, constant: -12),
@@ -165,6 +190,16 @@ private final class ShieldWindow: NSPanel {
       detailLabel.centerXAnchor.constraint(equalTo: effect.centerXAnchor),
       detailLabel.leadingAnchor.constraint(greaterThanOrEqualTo: effect.leadingAnchor, constant: 40),
       detailLabel.trailingAnchor.constraint(lessThanOrEqualTo: effect.trailingAnchor, constant: -40),
+
+      emergencyExitButton.centerXAnchor.constraint(equalTo: effect.centerXAnchor),
+      emergencyExitButton.bottomAnchor.constraint(equalTo: effect.bottomAnchor, constant: -50),
+      emergencyExitButton.heightAnchor.constraint(equalToConstant: 36),
+      emergencyExitButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 160),
     ])
   }
+
+  @objc private func onEmergencyExitClicked() {
+    EmergencyExitDialog.show()
+  }
 }
+

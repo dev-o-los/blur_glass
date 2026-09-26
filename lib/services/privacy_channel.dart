@@ -39,7 +39,7 @@ class PrivacyChannel {
     return _stream!;
   }
 
-  Future<T> _invoke<T>(String method, [Map<String, Object?>? args]) async {
+  Future<T> _invoke<T>(String method, [dynamic args]) async {
     try {
       final result = await _methods.invokeMethod<T>(method, args);
       if (result == null) {
@@ -80,6 +80,17 @@ class PrivacyChannel {
   Future<bool> stopProtection() => _invoke<bool>('stopProtection');
 
   Future<bool> isProtecting() => _invoke<bool>('isProtecting');
+
+  Future<bool> hasEmergencyPassword() => _invoke<bool>('hasEmergencyPassword');
+
+  Future<bool> setEmergencyPassword(String password) =>
+      _invoke<bool>('setEmergencyPassword', password);
+
+  Future<bool> verifyEmergencyPassword(String password) =>
+      _invoke<bool>('verifyEmergencyPassword', password);
+
+  Future<bool> clearEmergencyPassword() =>
+      _invoke<bool>('clearEmergencyPassword');
 
   Future<void> setConfig({
     double? yawDegrees,

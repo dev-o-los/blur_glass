@@ -238,6 +238,44 @@ class PrivacyController {
     }
   }
 
+  Future<bool> hasEmergencyPassword() async {
+    try {
+      return await _channel.hasEmergencyPassword();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> setEmergencyPassword(String password) async {
+    try {
+      return await _channel.setEmergencyPassword(password);
+    } on OwnerEnrollmentException catch (e) {
+      if (!_errors.isClosed) {
+        _errors.add(e.message);
+      }
+      return false;
+    } catch (e) {
+      if (!_errors.isClosed) {
+        _errors.add(e.toString());
+      }
+      return false;
+    }
+  }
+
+  Future<bool> verifyEmergencyPassword(String password) async {
+    try {
+      return await _channel.verifyEmergencyPassword(password);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> clearEmergencyPassword() async {
+    try {
+      await _channel.clearEmergencyPassword();
+    } catch (_) {}
+  }
+
   Future<void> clearOwner() async {
     try {
       await _channel.clearOwner();

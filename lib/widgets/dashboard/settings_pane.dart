@@ -41,7 +41,21 @@ class _SettingsPaneState extends State<SettingsPane> {
   double _unlockMs = 350;
   double _noFaceMs = 500;
   bool _saved = false;
+  bool _hasEmergencyPassword = false;
   Timer? _saveTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEmergencyPasswordStatus();
+  }
+
+  Future<void> _loadEmergencyPasswordStatus() async {
+    final has = await widget.controller.hasEmergencyPassword();
+    if (mounted) {
+      setState(() => _hasEmergencyPassword = has);
+    }
+  }
 
   @override
   void dispose() {
@@ -324,6 +338,238 @@ class _SettingsPaneState extends State<SettingsPane> {
                   ),
               ],
             ),
+          ),
+          const SizedBox(height: 16),
+          // Emergency Exit Password Card
+          Panel(
+            padding: const EdgeInsets.all(18),
+            borderRadius: 12,
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _hasEmergencyPassword
+                        ? colors.blueTint
+                        : BrandColors.red.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.lock_reset_rounded,
+                    size: 22,
+                    color: _hasEmergencyPassword ? colors.blue : BrandColors.red,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Emergency Exit Password',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _hasEmergencyPassword
+                            ? 'Configured • Type this password on the blur overlay to immediately stop protection.'
+                            : 'Not set • Configure a fallback password to bypass the blur overlay if needed.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                if (_hasEmergencyPassword) ...[
+                  OutlinedButton(
+                    onPressed: _showSetEmergencyPasswordDialog,
+                    child: const Text('Change'),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: BrandColors.red,
+                      side: BorderSide(
+                        color: BrandColors.red.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    onPressed: _confirmRemoveEmergencyPassword,
+                    child: const Text('Remove'),
+                  ),
+                ] else
+                  FilledButton(
+                    onPressed: _showSetEmergencyPasswordDialog,
+                    child: const Text('Set Password'),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSetEmergencyPasswordDialog() {
+    final passwordController = TextEditingController();
+    final confirmController = TextEditingController();
+    String? errorMessage;
+    bool obscure = true;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final colors = AppColors.of(dialogContext);
+
+          return AlertDialog(
+            title: Row(
+              children: [
+                Icon(
+                  Icons.shield_outlined,
+                  size: 20,
+                  color: colors.blue,
+                ),
+                const SizedBox(width: 8),
+                Text(_hasEmergencyPassword
+                    ? 'Change Emergency Password'
+                    : 'Set Emergency Password'),
+              ],
+            ),
+            content: SizedBox(
+              width: 380,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Enter a secure password that you can type on the screen overlay to instantly disable Blur Glass in an emergency.',
+                    style: Theme.of(dialogContext).textTheme.bodyMedium?.copyWith(
+                          color: colors.textSecondary,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: obscure,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      labelText: 'Emergency Password',
+                      hintText: 'Enter password',
+                      prefixIcon: const Icon(Icons.key_rounded, size: 18),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscure ? Icons.visibility_off : Icons.visibility,
+                          size: 18,
+                        ),
+                        onPressed: () =>
+                            setDialogState(() => obscure = !obscure),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: confirmController,
+                    obscureText: obscure,
+                    decoration: const InputDecoration(
+                      labelText: 'Confirm Password',
+                      hintText: 'Re-enter password',
+                      prefixIcon: Icon(Icons.check_circle_outline, size: 18),
+                    ),
+                  ),
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      errorMessage!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: BrandColors.red,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  final pass = passwordController.text.trim();
+                  final confirm = confirmController.text.trim();
+
+                  if (pass.isEmpty) {
+                    setDialogState(
+                        () => errorMessage = 'Password cannot be empty.');
+                    return;
+                  }
+                  if (pass.length < 4) {
+                    setDialogState(() => errorMessage =
+                        'Password should be at least 4 characters.');
+                    return;
+                  }
+                  if (pass != confirm) {
+                    setDialogState(
+                        () => errorMessage = 'Passwords do not match.');
+                    return;
+                  }
+
+                  final messenger = ScaffoldMessenger.of(context);
+                  final navigator = Navigator.of(dialogContext);
+
+                  final ok = await widget.controller.setEmergencyPassword(pass);
+                  if (ok) {
+                    navigator.pop();
+                    await _loadEmergencyPasswordStatus();
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text('Emergency exit password saved.'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  } else {
+                    setDialogState(() => errorMessage =
+                        'Failed to save emergency password. Please try again.');
+                  }
+                },
+                child: const Text('Save Password'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _confirmRemoveEmergencyPassword() {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Remove emergency password?'),
+        content: const Text(
+          'Without an emergency exit password, you will need to authenticate with Touch ID / macOS credentials to dismiss the overlay in an emergency.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: BrandColors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await widget.controller.clearEmergencyPassword();
+              await _loadEmergencyPasswordStatus();
+            },
+            child: const Text('Remove'),
           ),
         ],
       ),

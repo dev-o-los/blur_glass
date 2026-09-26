@@ -33,6 +33,8 @@
 		B1A100070000000000000001 /* ScreenShieldController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A100080000000000000001 /* ScreenShieldController.swift */; };
 		B1A100090000000000000001 /* BlurGlassRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A1000A0000000000000001 /* BlurGlassRuntime.swift */; };
 		B1A1000B0000000000000001 /* PrivacyPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A1000C0000000000000001 /* PrivacyPlugin.swift */; };
+		B1A1000D0000000000000002 /* EmergencyPasswordStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A1000E0000000000000002 /* EmergencyPasswordStore.swift */; };
+		B1A1000F0000000000000002 /* EmergencyExitDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A100100000000000000002 /* EmergencyExitDialog.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 /* End PBXBuildFile section */
 
@@ -92,6 +94,8 @@
 		B1A100080000000000000001 /* ScreenShieldController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenShieldController.swift; sourceTree = "<group>"; };
 		B1A1000A0000000000000001 /* BlurGlassRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlurGlassRuntime.swift; sourceTree = "<group>"; };
 		B1A1000C0000000000000001 /* PrivacyPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPlugin.swift; sourceTree = "<group>"; };
+		B1A1000E0000000000000002 /* EmergencyPasswordStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyPasswordStore.swift; sourceTree = "<group>"; };
+		B1A100100000000000000002 /* EmergencyExitDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyExitDialog.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -184,6 +188,8 @@
 				B1A100080000000000000001 /* ScreenShieldController.swift */,
 				B1A1000A0000000000000001 /* BlurGlassRuntime.swift */,
 				B1A1000C0000000000000001 /* PrivacyPlugin.swift */,
+				B1A1000E0000000000000002 /* EmergencyPasswordStore.swift */,
+				B1A100100000000000000002 /* EmergencyExitDialog.swift */,
 			);
 			path = Privacy;
 			sourceTree = "<group>";
@@ -389,6 +395,8 @@
 				B1A100070000000000000001 /* ScreenShieldController.swift in Sources */,
 				B1A100090000000000000001 /* BlurGlassRuntime.swift in Sources */,
 				B1A1000B0000000000000001 /* PrivacyPlugin.swift in Sources */,
+				B1A1000D0000000000000002 /* EmergencyPasswordStore.swift in Sources */,
+				B1A1000F0000000000000002 /* EmergencyExitDialog.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

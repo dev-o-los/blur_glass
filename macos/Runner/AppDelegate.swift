@@ -47,7 +47,7 @@ class AppDelegate: FlutterAppDelegate {
     statusItem?.menu = menu
   }
 
-  @objc private func showControlWindow() {
+  @objc func showControlWindow() {
     NSApp.activate(ignoringOtherApps: true)
     mainFlutterWindow?.makeKeyAndOrderFront(nil)
   }

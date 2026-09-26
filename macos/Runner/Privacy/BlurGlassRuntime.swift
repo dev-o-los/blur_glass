@@ -1,3 +1,4 @@
+import AppKit
 import AVFoundation
 import CryptoKit
 import Foundation
@@ -237,6 +238,7 @@ final class BlurGlassRuntime {
       camera.stop()
     }
     shield.setVisible(false, reason: "")
+    EmergencyExitDialog.dismiss()
     emit(
       AttentionSnapshot(
         state: ShieldReason.idle.rawValue,
@@ -249,6 +251,34 @@ final class BlurGlassRuntime {
         shieldVisible: false
       )
     )
+  }
+
+  /// Emergency Exit: Stops protection immediately, removes shield overlay, and opens the main app window.
+  func emergencyExit() {
+    stopProtection()
+    DispatchQueue.main.async {
+      if let appDelegate = NSApp.delegate as? AppDelegate {
+        appDelegate.showControlWindow()
+      } else {
+        NSApp.activate(ignoringOtherApps: true)
+      }
+    }
+  }
+
+  var hasEmergencyPassword: Bool {
+    EmergencyPasswordStore.shared.hasPassword
+  }
+
+  func setEmergencyPassword(_ pass: String) throws {
+    try EmergencyPasswordStore.shared.setPassword(pass)
+  }
+
+  func verifyEmergencyPassword(_ pass: String) -> Bool {
+    EmergencyPasswordStore.shared.verifyPassword(pass)
+  }
+
+  func clearEmergencyPassword() {
+    EmergencyPasswordStore.shared.clearPassword()
   }
 
   func applyConfig(_ map: [String: Any]) {
