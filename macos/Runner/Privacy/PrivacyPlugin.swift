@@ -35,7 +35,7 @@ final class PrivacyPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
           if ok {
             result(true)
           } else {
-            result(FlutterError(code: "auth_failed", message: error ?? "Authentication failed", details: nil))
+            result(FlutterError(code: "auth_failed", message: error?.localizedDescription ?? "Authentication failed", details: nil))
           }
         }
       }

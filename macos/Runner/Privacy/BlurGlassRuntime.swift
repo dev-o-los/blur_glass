@@ -88,18 +88,18 @@ final class BlurGlassRuntime {
     AVCaptureDevice.requestAccess(for: .video, completionHandler: completion)
   }
 
-  func authenticateMacUser(_ completion: @escaping (Bool, String?) -> Void) {
+  func authenticateMacUser(_ completion: @escaping (Bool, Error?) -> Void) {
     let context = LAContext()
     var error: NSError?
     let reason = "Confirm your identity to start Blur Glass protection."
     if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
       context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { ok, err in
         DispatchQueue.main.async {
-          completion(ok, err?.localizedDescription)
+          completion(ok, err)
         }
       }
     } else {
-      completion(true, error?.localizedDescription)
+      completion(true, error)
     }
   }
 
@@ -115,7 +115,7 @@ final class BlurGlassRuntime {
       self.authenticateMacUser { ok, error in
         guard ok else {
           let cancelled = (error as? LAError)?.code == .userCancel || error == nil
-          completion(cancelled ? .cancelled : .failed(error ?? "Authentication failed"))
+          completion(cancelled ? .cancelled : .failed(error?.localizedDescription ?? "Authentication failed"))
           return
         }
         if self.hasOwnerTemplate {
