@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../attention_snapshot.dart';
@@ -352,11 +353,13 @@ class _PaneScaffold extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.child,
+    this.maxWidth = 620,
   });
 
   final String title;
   final String subtitle;
   final Widget child;
+  final double maxWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -364,31 +367,38 @@ class _PaneScaffold extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, viewport) => SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: viewport.maxHeight - 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.4,
-                      color: colors.textPrimary,
-                    ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colors.textSecondary,
-                    ),
-              ),
-              const SizedBox(height: 20),
-              child,
-            ],
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: maxWidth,
+              minHeight: math.max(0, viewport.maxHeight - 44),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 6),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.4,
+                        color: colors.textPrimary,
+                        fontSize: 22,
+                      ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colors.textSecondary,
+                        fontSize: 13,
+                      ),
+                ),
+                const SizedBox(height: 18),
+                child,
+              ],
+            ),
           ),
         ),
       ),
@@ -407,38 +417,35 @@ class _HomePane extends StatelessWidget {
     return _PaneScaffold(
       title: 'Screen Privacy',
       subtitle: 'Automatically blur your screen when you look away.',
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 580),
-          child: StreamBuilder<AttentionSnapshot>(
-            stream: controller.snapshots,
-            initialData: controller.currentSnapshot,
-            builder: (context, snapshot) {
-              final state = snapshot.data;
-              return Column(
-                children: [
-                  Panel(
-                    borderRadius: 16,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 28,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _StatusHero(state: state),
-                        const SizedBox(height: 24),
-                        _PrimaryAction(controller: controller, state: state),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _TelemetryGrid(state: state),
-                ],
-              );
-            },
-          ),
-        ),
+      maxWidth: 620,
+      child: StreamBuilder<AttentionSnapshot>(
+        stream: controller.snapshots,
+        initialData: controller.currentSnapshot,
+        builder: (context, snapshot) {
+          final state = snapshot.data;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Panel(
+                borderRadius: 14,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 22,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _StatusHero(state: state),
+                    const SizedBox(height: 20),
+                    _PrimaryAction(controller: controller, state: state),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              _TelemetryGrid(state: state),
+            ],
+          );
+        },
       ),
     );
   }
@@ -490,7 +497,7 @@ class _StatusHero extends StatelessWidget {
     return Column(
       children: [
         HaloRings(
-          size: 196,
+          size: 156,
           accent: accent,
           isPulsing: isProtecting,
           child: AnimatedSwitcher(
@@ -498,12 +505,12 @@ class _StatusHero extends StatelessWidget {
             child: Icon(
               _heroIcon,
               key: ValueKey(_heroIcon),
-              size: 58,
+              size: 48,
               color: accent,
             ),
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 16),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
           child: Text(
@@ -512,18 +519,20 @@ class _StatusHero extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w700,
+                  fontSize: 21,
                   letterSpacing: -0.3,
                   color: colors.textPrimary,
                 ),
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Text(
           _subtitle,
           textAlign: TextAlign.center,
           maxLines: 2,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: colors.textSecondary,
+                fontSize: 13,
               ),
         ),
       ],
@@ -545,7 +554,7 @@ class _StatusHero extends StatelessWidget {
   }
 }
 
-/// Primary button styled with tactile macOS feel.
+/// Primary button styled with tactile macOS feel and comfortable width.
 class _PrimaryAction extends StatelessWidget {
   const _PrimaryAction({required this.controller, required this.state});
 
@@ -560,10 +569,10 @@ class _PrimaryAction extends StatelessWidget {
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 320),
+        constraints: const BoxConstraints(maxWidth: 440),
         child: SizedBox(
           width: double.infinity,
-          height: 42,
+          height: 44,
           child: FilledButton.icon(
             style: FilledButton.styleFrom(
               backgroundColor: protecting
@@ -574,8 +583,10 @@ class _PrimaryAction extends StatelessWidget {
               foregroundColor: protecting
                   ? (colors.isDark ? Colors.white : colors.textPrimary)
                   : Colors.white,
+              elevation: protecting ? 0 : 2,
+              shadowColor: colors.blue.withValues(alpha: 0.35),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(9),
               ),
             ),
             onPressed: enrolling
@@ -592,7 +603,7 @@ class _PrimaryAction extends StatelessWidget {
             label: Text(
               protecting ? 'Pause protection' : 'Start protection',
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 14.5,
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.1,
               ),
@@ -804,12 +815,10 @@ class _SettingsPaneState extends State<_SettingsPane> {
     return _PaneScaffold(
       title: 'Settings',
       subtitle: 'Fine-tune attention sensitivity, theme mode, and screen lock timing.',
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 580),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+      maxWidth: 620,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
               // Appearance Card (Theme Toggle)
               Panel(
                 padding: const EdgeInsets.all(20),
@@ -1039,8 +1048,6 @@ class _SettingsPaneState extends State<_SettingsPane> {
               ),
             ],
           ),
-        ),
-      ),
     );
   }
 
@@ -1250,11 +1257,9 @@ class _AboutPane extends StatelessWidget {
     return _PaneScaffold(
       title: 'About Blur Glass',
       subtitle: 'Version 1.0.0 (Build 2026.1) • Apple Silicon & Intel Native',
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 580),
-          child: Column(
-            children: [
+      maxWidth: 620,
+      child: Column(
+        children: [
               const SizedBox(height: 8),
               const BrandMark(size: 64),
               const SizedBox(height: 16),
@@ -1316,8 +1321,6 @@ class _AboutPane extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
     );
   }
 }
