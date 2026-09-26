@@ -1,19 +1,15 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../privacy_controller.dart';
 import '../theme.dart';
 
-/// First-run flow, built like a native macOS setup assistant:
+/// First-run flow, styled to Apple macOS Setup Assistant standards:
 ///
 /// 1. Welcome — what Blur Glass is, before asking for anything.
 /// 2. How it works — exactly when the screen blurs.
-/// 3. Camera — the system permission, with context and a recovery path.
-/// 4. Verify — explains the macOS password prompt *before* it appears, then
-///    captures the face template. Ends in a success state.
-///
-/// No system dialog is shown before the user has read what it is for.
+/// 3. Camera — system permission, context and recovery paths.
+/// 4. Verify — biometric setup and owner face enrollment.
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key, required this.controller});
 
@@ -47,70 +43,70 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _StepHeader(
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 520),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Safe top padding for macOS titlebar area
+              const SizedBox(height: 12),
+              _StepHeader(
                 step: _step,
-                    stepCount: _stepCount,
-                    label: _stepLabels[_step],
-                    canGoBack: _canGoBack,
-                    onBack: _back,
-                  ),
-                  const SizedBox(height: 24),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      switchInCurve: Curves.easeOut,
-                      switchOutCurve: Curves.easeIn,
-                      transitionBuilder: (child, animation) => FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0.03, 0),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      ),
-                      child: switch (_step) {
-                        0 => const _WelcomeStep(key: ValueKey(0)),
-                        1 => const _HowItWorksStep(key: ValueKey(1)),
-                        2 => _CameraStep(
-                            key: const ValueKey(2),
-                            controller: widget.controller,
-                            onContinue: _next,
-                          ),
-                        _ => _VerifyStep(
-                            key: const ValueKey(3),
-                            controller: widget.controller,
-                          ),
-                      },
-                    ),
-                  ),
-                  if (_step < 2) ...[
-                    const SizedBox(height: 16),
-                    _WizardFooter(
-                      showBack: false,
-                      primaryLabel: 'Continue',
-                      onPrimary: _next,
-                    ),
-                  ],
-                ],
+                stepCount: _stepCount,
+                label: _stepLabels[_step],
+                canGoBack: _canGoBack,
+                onBack: _back,
               ),
-            ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 260),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.04, 0),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  ),
+                  child: switch (_step) {
+                    0 => const _WelcomeStep(key: ValueKey(0)),
+                    1 => const _HowItWorksStep(key: ValueKey(1)),
+                    2 => _CameraStep(
+                        key: const ValueKey(2),
+                        controller: widget.controller,
+                        onContinue: _next,
+                      ),
+                    _ => _VerifyStep(
+                        key: const ValueKey(3),
+                        controller: widget.controller,
+                      ),
+                  },
+                ),
+              ),
+              if (_step < 2) ...[
+                const SizedBox(height: 16),
+                _WizardFooter(
+                  showBack: false,
+                  primaryLabel: 'Continue',
+                  onPrimary: _next,
+                ),
+              ],
+            ],
           ),
         ),
+      ),
     );
   }
 }
 
-/// Caption + thin progress bar + optional back button, macOS-assistant style.
+/// macOS assistant step progression header.
 class _StepHeader extends StatelessWidget {
   const _StepHeader({
     required this.step,
@@ -137,24 +133,42 @@ class _StepHeader extends StatelessWidget {
               IconButton(
                 tooltip: 'Back',
                 onPressed: onBack,
-                icon: const Icon(Icons.chevron_left_rounded, size: 22),
+                icon: const Icon(Icons.chevron_left_rounded, size: 20),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               )
             else
-              const SizedBox(width: 36),
+              const SizedBox(width: 28),
             const Spacer(),
-            Text(
-              'Step ${step + 1} of $stepCount · $label',
-              style: Theme.of(context).textTheme.labelMedium,
+            Builder(
+              builder: (context) {
+                final colors = AppColors.of(context);
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colors.hairline),
+                  ),
+                  child: Text(
+                    'Step ${step + 1} of $stepCount · $label',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: colors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                );
+              },
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         ClipRRect(
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(3),
           child: LinearProgressIndicator(
             value: (step + 1) / stepCount,
-            minHeight: 3,
-            backgroundColor: BrandColors.hairlineStrong,
+            minHeight: 3.5,
+            backgroundColor: Colors.white.withValues(alpha: 0.08),
             valueColor: const AlwaysStoppedAnimation(BrandColors.blue),
           ),
         ),
@@ -163,7 +177,7 @@ class _StepHeader extends StatelessWidget {
   }
 }
 
-/// Back on the left, primary action on the right — macOS dialog convention.
+/// Dialog navigation buttons with Apple-style primary gradient.
 class _WizardFooter extends StatelessWidget {
   const _WizardFooter({
     required this.showBack,
@@ -196,7 +210,7 @@ class _WizardFooter extends StatelessWidget {
   }
 }
 
-/// A feature row: quiet tinted icon chip + title + one-line explanation.
+/// Feature card with macOS squircle icon and subtle glass container.
 class _FeatureRow extends StatelessWidget {
   const _FeatureRow({
     required this.icon,
@@ -214,30 +228,64 @@ class _FeatureRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: tint,
-            borderRadius: BorderRadius.circular(8),
+    final colors = AppColors.of(context);
+    final isDark = colors.isDark;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: colors.hairline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          child: Icon(icon, size: 18, color: iconColor),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 2),
-              Text(body, style: Theme.of(context).textTheme.bodySmall),
-            ],
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: tint,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: iconColor.withValues(alpha: 0.3),
+                width: 0.75,
+              ),
+            ),
+            child: Icon(icon, size: 18, color: iconColor),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  body,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colors.textSecondary,
+                        height: 1.35,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -261,7 +309,7 @@ class _WelcomeStep extends StatelessWidget {
           '• You can delete the template at any time from the app.',
         ),
         actions: [
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Got it'),
           ),
@@ -276,15 +324,18 @@ class _WelcomeStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           const Center(child: BrandMark(size: 64)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Text(
             'Blur Glass',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.4,
+                ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             'Your Mac, visible only to you.',
             textAlign: TextAlign.center,
@@ -292,7 +343,7 @@ class _WelcomeStep extends StatelessWidget {
                   color: BrandColors.textSecondary,
                 ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
           const _FeatureRow(
             icon: Icons.visibility_outlined,
             title: 'Reads attention, not video',
@@ -300,7 +351,7 @@ class _WelcomeStep extends StatelessWidget {
                 'The camera is used only to check that you are present and '
                 'looking at the screen.',
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           const _FeatureRow(
             icon: Icons.blur_on_rounded,
             title: 'Blurs the entire screen',
@@ -308,7 +359,7 @@ class _WelcomeStep extends StatelessWidget {
                 'When someone approaches or you look away, a frosted layer '
                 'covers everything — over every app — until it is you again.',
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           const _FeatureRow(
             icon: Icons.lock_outline_rounded,
             title: 'Private by design',
@@ -316,7 +367,7 @@ class _WelcomeStep extends StatelessWidget {
                 'Your face template never leaves this Mac. No cloud, no '
                 'analytics, no recordings.',
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           Center(
             child: TextButton(
               onPressed: () => _showPrivacyDetails(context),
@@ -340,15 +391,19 @@ class _HowItWorksStep extends StatelessWidget {
         children: [
           Text(
             'When does the screen blur?',
-            style: Theme.of(context).textTheme.headlineSmall,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             'Blur Glass watches for three situations. In each one, the whole '
             'screen turns into frosted glass until it recognizes you again.',
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: BrandColors.textSecondary,
+                ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
           const _FeatureRow(
             icon: Icons.groups_rounded,
             title: 'Someone appears behind you',
@@ -358,7 +413,7 @@ class _HowItWorksStep extends StatelessWidget {
             tint: BrandColors.redTint,
             iconColor: BrandColors.red,
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           const _FeatureRow(
             icon: Icons.visibility_off_outlined,
             title: 'You look away for too long',
@@ -368,7 +423,7 @@ class _HowItWorksStep extends StatelessWidget {
             tint: BrandColors.amberTint,
             iconColor: BrandColors.amber,
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           const _FeatureRow(
             icon: Icons.directions_walk_rounded,
             title: 'You step away',
@@ -378,52 +433,67 @@ class _HowItWorksStep extends StatelessWidget {
             tint: BrandColors.neutralTint,
             iconColor: BrandColors.textSecondary,
           ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: BrandColors.blueTint,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: BrandColors.hairline),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.auto_awesome_rounded,
-                    size: 18, color: BrandColors.blue),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'The frost lifts automatically the moment Blur Glass '
-                    'recognizes you again — no clicking required.',
-                    style: Theme.of(context).textTheme.bodySmall,
+          const SizedBox(height: 16),
+          Builder(
+            builder: (context) {
+              final colors = AppColors.of(context);
+              return Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colors.blueTint,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: colors.blue.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.auto_awesome_rounded,
+                            size: 18, color: colors.blue),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'The frost lifts automatically the moment Blur Glass '
+                            'recognizes you again — no clicking required.',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: colors.textPrimary,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: BrandColors.neutralTint,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: BrandColors.hairline),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.face_outlined,
-                    size: 18, color: BrandColors.textSecondary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'One-time face enrollment is required. It is how Blur '
-                    'Glass tells you apart from everyone else — without it, '
-                    'protection cannot run.',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colors.neutralTint,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: colors.hairline),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.face_outlined,
+                            size: 18, color: colors.textSecondary),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'One-time face enrollment is required. It is how Blur '
+                            'Glass tells you apart from everyone else — without it, '
+                            'protection cannot run.',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: colors.textSecondary,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -455,22 +525,30 @@ class _CameraStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Camera access', style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 6),
+              Text(
+                'Camera access',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 4),
               Text(
                 'Blur Glass needs the camera to know when you are at the Mac. '
                 'Frames are analyzed in memory and discarded immediately — '
                 'nothing is ever recorded.',
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: BrandColors.textSecondary,
+                    ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               Panel(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(22),
+                borderRadius: 12,
                 child: Column(
                   children: [
                     Container(
-                      width: 44,
-                      height: 44,
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
                         color: authorized
                             ? BrandColors.greenTint
@@ -478,6 +556,13 @@ class _CameraStep extends StatelessWidget {
                                 ? BrandColors.amberTint
                                 : BrandColors.blueTint,
                         shape: BoxShape.circle,
+                        border: Border.all(
+                          color: authorized
+                              ? BrandColors.green.withValues(alpha: 0.4)
+                              : blocked
+                                  ? BrandColors.amber.withValues(alpha: 0.4)
+                                  : BrandColors.blue.withValues(alpha: 0.4),
+                        ),
                       ),
                       child: Icon(
                         authorized
@@ -485,7 +570,7 @@ class _CameraStep extends StatelessWidget {
                             : blocked
                                 ? Icons.error_outline_rounded
                                 : Icons.videocam_outlined,
-                        size: 22,
+                        size: 24,
                         color: authorized
                             ? BrandColors.green
                             : blocked
@@ -500,7 +585,9 @@ class _CameraStep extends StatelessWidget {
                         'denied' || 'restricted' => 'Camera access is blocked',
                         _ => 'Waiting for permission',
                       },
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -518,7 +605,9 @@ class _CameraStep extends StatelessWidget {
                               'dialog. Choose “Allow” to continue.',
                       },
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: BrandColors.textSecondary,
+                          ),
                     ),
                     const SizedBox(height: 16),
                     if (!authorized)
@@ -560,7 +649,9 @@ class _CameraStep extends StatelessWidget {
                 Text(
                   'You can grant camera access later from the menu bar icon.',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelSmall,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: BrandColors.textTertiary,
+                      ),
                 ),
             ],
           ),
@@ -570,8 +661,7 @@ class _CameraStep extends StatelessWidget {
   }
 }
 
-/// The final step: explains the macOS identity prompt BEFORE showing it,
-/// runs enrollment with live progress, and lands on success.
+/// Biometric verification step: explains macOS security prompt & runs on-device enrollment.
 class _VerifyStep extends StatefulWidget {
   const _VerifyStep({super.key, required this.controller});
 
@@ -608,9 +698,12 @@ class _VerifyStepState extends State<_VerifyStep> {
       return _SuccessBody(controller: widget.controller);
     }
     if (enrolling) {
-      return _EnrollingBody(message: message, onCancel: () {
-        unawaited(widget.controller.cancelEnrollment());
-      });
+      return _EnrollingBody(
+        message: message,
+        onCancel: () {
+          unawaited(widget.controller.cancelEnrollment());
+        },
+      );
     }
     return _VerifyIntro(controller: widget.controller);
   }
@@ -627,15 +720,22 @@ class _VerifyIntro extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Verify it\'s you', style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 6),
+          Text(
+            'Verify it\'s you',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 4),
           Text(
             'Required before protection can start — Blur Glass must learn '
             'your face to tell you apart from a stranger. Two quick checks, '
             'about twenty seconds.',
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: BrandColors.textSecondary,
+                ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           const _FeatureRow(
             icon: Icons.password_rounded,
             title: '1 · Verify with macOS',
@@ -645,7 +745,7 @@ class _VerifyIntro extends StatelessWidget {
                 'Glass to learn your face. Blur Glass never sees your '
                 'password.',
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           const _FeatureRow(
             icon: Icons.face_retouching_natural_rounded,
             title: '2 · Look at the camera',
@@ -654,7 +754,7 @@ class _VerifyIntro extends StatelessWidget {
                 'sit normally. They are matched on-device and stored in '
                 'Blur Glass\'s private app storage.',
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: () => unawaited(controller.enroll()),
             icon: const Icon(Icons.shield_outlined, size: 16),
@@ -664,7 +764,9 @@ class _VerifyIntro extends StatelessWidget {
           Text(
             'You can re-run this any time from the app.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.labelSmall,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: BrandColors.textTertiary,
+                ),
           ),
         ],
       ),
@@ -680,32 +782,42 @@ class _EnrollingBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const SizedBox(
-          width: 40,
-          height: 40,
-          child: CircularProgressIndicator(strokeWidth: 3),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          message ?? 'Learning your face…',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Sit like you normally do and keep your eyes on the screen.',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 28),
-        OutlinedButton(
-          onPressed: onCancel,
-          child: const Text('Cancel'),
-        ),
-      ],
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          HaloRings(
+            size: 156,
+            accent: BrandColors.blueBright,
+            child: const Icon(
+              Icons.face_retouching_natural_rounded,
+              size: 48,
+              color: BrandColors.blueBright,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            message ?? 'Learning your face…',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Sit like you normally do and keep your eyes on the screen.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: BrandColors.textSecondary,
+                ),
+          ),
+          const SizedBox(height: 24),
+          OutlinedButton(
+            onPressed: onCancel,
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -717,34 +829,57 @@ class _SuccessBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 64,
-          height: 64,
-          decoration: const BoxDecoration(
-            color: BrandColors.greenTint,
-            shape: BoxShape.circle,
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: BrandColors.greenTint,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: BrandColors.green.withValues(alpha: 0.5),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: BrandColors.green.withValues(alpha: 0.3),
+                  blurRadius: 18,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.check_rounded,
+              size: 34,
+              color: BrandColors.green,
+            ),
           ),
-          child: const Icon(Icons.check_rounded, size: 36, color: BrandColors.green),
-        ),
-        const SizedBox(height: 20),
-        Text('You\'re all set', style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 8),
-        Text(
-          'Your face template is saved privately on this Mac. From now on, '
-          'the screen blurs whenever you\'re not the only one looking.',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 28),
-        FilledButton.icon(
-          onPressed: controller.finishOnboarding,
-          icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-          label: const Text('Open Blur Glass'),
-        ),
-      ],
+          const SizedBox(height: 18),
+          Text(
+            'You\'re all set',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Your face template is saved privately on this Mac. From now on, '
+            'the screen blurs whenever you\'re not the only one looking.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: BrandColors.textSecondary,
+                ),
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: controller.finishOnboarding,
+            icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+            label: const Text('Open Blur Glass'),
+          ),
+        ],
+      ),
     );
   }
 }

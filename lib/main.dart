@@ -19,11 +19,18 @@ class BlurGlassApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Blur Glass',
-      debugShowCheckedModeBanner: false,
-      theme: BlurGlassTheme.dark(),
-      home: _Root(controller: controller),
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'Blur Glass',
+          debugShowCheckedModeBanner: false,
+          theme: BlurGlassTheme.light(),
+          darkTheme: BlurGlassTheme.dark(),
+          themeMode: ThemeController.instance.themeMode,
+          home: _Root(controller: controller),
+        );
+      },
     );
   }
 }
@@ -64,22 +71,25 @@ class _RootState extends State<_Root> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<AppPhase>(
-      stream: _controller.phase,
-      initialData: _controller.currentPhase,
-      builder: (context, snapshot) {
-        final phase = snapshot.data ?? AppPhase.loading;
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: switch (phase) {
-            AppPhase.dashboard => DashboardScreen(
-                key: const ValueKey('dashboard'), controller: _controller),
-            AppPhase.onboarding => OnboardingScreen(
-                key: const ValueKey('onboarding'), controller: _controller),
-            AppPhase.loading => const _Splash(key: ValueKey('splash')),
-          },
-        );
-      },
+    return Scaffold(
+      backgroundColor: AppColors.of(context).canvas,
+      body: StreamBuilder<AppPhase>(
+        stream: _controller.phase,
+        initialData: _controller.currentPhase,
+        builder: (context, snapshot) {
+          final phase = snapshot.data ?? AppPhase.loading;
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: switch (phase) {
+              AppPhase.dashboard => DashboardScreen(
+                  key: const ValueKey('dashboard'), controller: _controller),
+              AppPhase.onboarding => OnboardingScreen(
+                  key: const ValueKey('onboarding'), controller: _controller),
+              AppPhase.loading => const _Splash(key: ValueKey('splash')),
+            },
+          );
+        },
+      ),
     );
   }
 }

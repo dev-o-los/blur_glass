@@ -19,11 +19,9 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
     vibrancy.material = .underWindowBackground
     vibrancy.blendingMode = .behindWindow
     vibrancy.state = .active
-    vibrancy.appearance = NSAppearance(named: .darkAqua)
     vibrancy.autoresizingMask = [.width, .height]
-    contentView?.addSubview(vibrancy, positioned: .below, relativeTo: flutterViewController.view)
+    contentView?.addSubview(vibrancy, positioned: .below, relativeTo: nil)
 
-    self.appearance = NSAppearance(named: .darkAqua)
     self.titlebarAppearsTransparent = true
     // Frameless look: the Flutter sidebar paints flush behind the traffic
     // lights, exactly like the product mock.
