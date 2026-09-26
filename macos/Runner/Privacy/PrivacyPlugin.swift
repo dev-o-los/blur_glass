@@ -16,6 +16,10 @@ final class PrivacyPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     let runtime = BlurGlassRuntime.shared
     switch call.method {
+    case "getDeviceFingerprint":
+      result(DeviceIdentity.getDeviceFingerprint())
+    case "getHardwareUUID":
+      result(DeviceIdentity.getHardwareUUID())
     case "getCameraPermission":
       result(runtime.cameraAuthorization())
     case "requestCameraPermission":

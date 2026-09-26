@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../services/privacy_controller.dart';
@@ -40,6 +41,13 @@ class _SettingsPaneState extends State<SettingsPane> {
   double _unlockMs = 350;
   double _noFaceMs = 500;
   bool _saved = false;
+  Timer? _saveTimer;
+
+  @override
+  void dispose() {
+    _saveTimer?.cancel();
+    super.dispose();
+  }
 
   void _apply() {
     BlurGlassSettings.apply(
@@ -50,7 +58,8 @@ class _SettingsPaneState extends State<SettingsPane> {
       noFaceMs: _noFaceMs,
     );
     setState(() => _saved = true);
-    Future.delayed(const Duration(milliseconds: 1500), () {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 1500), () {
       if (mounted) setState(() => _saved = false);
     });
   }

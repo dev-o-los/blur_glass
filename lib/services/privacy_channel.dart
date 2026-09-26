@@ -42,11 +42,21 @@ class PrivacyChannel {
   Future<T> _invoke<T>(String method, [Map<String, Object?>? args]) async {
     try {
       final result = await _methods.invokeMethod<T>(method, args);
+      if (result == null) {
+        if (T == String) return '' as T;
+        if (T == bool) return false as T;
+        if (T == int) return 0 as T;
+      }
       return result as T;
     } on PlatformException catch (e) {
       throw OwnerEnrollmentException(e.message ?? e.code);
     }
   }
+
+  Future<String> getDeviceFingerprint() =>
+      _invoke<String>('getDeviceFingerprint');
+
+  Future<String> getHardwareUUID() => _invoke<String>('getHardwareUUID');
 
   Future<String> cameraPermission() => _invoke<String>('getCameraPermission');
 

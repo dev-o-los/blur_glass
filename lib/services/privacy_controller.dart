@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'device_lock_service.dart';
 import 'privacy_channel.dart';
 
 /// App lifecycle: onboarding → dashboard.
@@ -11,8 +12,14 @@ enum AppPhase { loading, onboarding, dashboard }
 /// enrollment (a native-run procedure that emits progress snapshots on the
 /// same event channel), and re-checks permission state on resume.
 class PrivacyController {
-  PrivacyController({PrivacyChannel? channel})
-      : _channel = channel ?? PrivacyChannel() {
+  PrivacyController({
+    PrivacyChannel? channel,
+    DeviceLockService? deviceLockService,
+  })  : _channel = channel ?? PrivacyChannel(),
+        _deviceLock = deviceLockService ??
+            (channel != null
+                ? DeviceLockService(channel: channel)
+                : DeviceLockService.instance) {
     _instance = this;
   }
 
@@ -22,6 +29,7 @@ class PrivacyController {
   static PrivacyController? get instance => _instance;
 
   final PrivacyChannel _channel;
+  final DeviceLockService _deviceLock;
 
   final _phase = StreamController<AppPhase>.broadcast();
   final _permission = StreamController<String>.broadcast();
@@ -52,6 +60,7 @@ class PrivacyController {
 
   Future<void> init() async {
     _snapshotSub = _channel.snapshots().listen(_onSnapshot);
+    await _deviceLock.verify();
     await _refresh();
   }
 
@@ -190,6 +199,16 @@ class PrivacyController {
   }
 
   Future<void> startProtection() async {
+    final lockStatus = await _deviceLock.verify();
+    if (lockStatus == DeviceLockStatus.mismatch) {
+      if (!_errors.isClosed) {
+        _errors.add(
+          'Protected device mismatch: This installation is bound to another Mac. '
+          'Please install fresh from the official website.',
+        );
+      }
+      return;
+    }
     try {
       await _channel.startProtection();
       await _refresh();

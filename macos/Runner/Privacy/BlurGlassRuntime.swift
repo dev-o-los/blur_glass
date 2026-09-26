@@ -1,5 +1,7 @@
 import AVFoundation
+import CryptoKit
 import Foundation
+import IOKit
 import LocalAuthentication
 import Vision
 
@@ -359,6 +361,35 @@ final class BlurGlassRuntime {
     DispatchQueue.main.async {
       l?(map)
     }
+  }
+}
+
+enum DeviceIdentity {
+  /// Reads the immutable Apple hardware UUID from IOKit IOPlatformExpertDevice.
+  static func getHardwareUUID() -> String {
+    let matching = IOServiceMatching("IOPlatformExpertDevice")
+    let service = IOServiceGetMatchingService(kIOMainPortDefault, matching)
+    guard service != 0 else { return "UNKNOWN_DEVICE" }
+    defer { IOObjectRelease(service) }
+
+    if let property = IORegistryEntryCreateCFProperty(
+      service,
+      kIOPlatformUUIDKey as CFString,
+      kCFAllocatorDefault,
+      0
+    )?.takeRetainedValue() as? String {
+      return property.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    return "UNKNOWN_DEVICE"
+  }
+
+  /// Cryptographic SHA-256 fingerprint uniquely binding this Mac to Blur Glass.
+  static func getDeviceFingerprint() -> String {
+    let rawUUID = getHardwareUUID()
+    let salt = "blur_glass_hardware_salt_2026_dodo"
+    let input = "\(rawUUID):\(salt)"
+    let digest = SHA256.hash(data: Data(input.utf8))
+    return digest.compactMap { String(format: "%02x", $0) }.joined()
   }
 }
 

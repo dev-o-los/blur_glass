@@ -46,13 +46,16 @@ class _Root extends StatefulWidget {
 
 class _RootState extends State<_Root> {
   late final PrivacyController _controller;
+  StreamSubscription<String>? _errorSub;
 
   @override
   void initState() {
     super.initState();
     _controller = widget.controller ?? PrivacyController();
-    unawaited(_controller.init());
-    _controller.errors.listen((message) {
+    if (widget.controller == null) {
+      unawaited(_controller.init());
+    }
+    _errorSub = _controller.errors.listen((message) {
       if (!mounted) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -65,7 +68,10 @@ class _RootState extends State<_Root> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _errorSub?.cancel();
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
     super.dispose();
   }
 
