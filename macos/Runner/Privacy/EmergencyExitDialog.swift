@@ -3,7 +3,7 @@ import QuartzCore
 
 /// Custom NSSecureTextFieldCell that vertically centers the text and cursor with precise insets.
 private final class CenteredSecureTextFieldCell: NSSecureTextFieldCell {
-  var horizontalPadding: CGFloat = 14
+  var horizontalPadding: CGFloat = 12
 
   override func drawingRect(forBounds rect: NSRect) -> NSRect {
     let textSize = cellSize(forBounds: rect)
@@ -55,7 +55,7 @@ private final class CenteredSecureTextFieldCell: NSSecureTextFieldCell {
   }
 }
 
-/// Custom Secure Text Field with modern frosted styling and centered cursor.
+/// Custom Secure Text Field with elegant macOS glass styling and centered cursor.
 private final class CustomSecureTextField: NSSecureTextField {
   override init(frame frameRect: NSRect) {
     super.init(frame: frameRect)
@@ -82,18 +82,18 @@ private final class CustomSecureTextField: NSSecureTextField {
     isBordered = false
     drawsBackground = false
     focusRingType = .none
-    font = .systemFont(ofSize: 15, weight: .regular)
+    font = .systemFont(ofSize: 14, weight: .regular)
     textColor = .white
 
     wantsLayer = true
-    layer?.backgroundColor = NSColor(white: 0.06, alpha: 0.85).cgColor
-    layer?.cornerRadius = 10
-    layer?.borderWidth = 1.2
-    layer?.borderColor = NSColor.white.withAlphaComponent(0.22).cgColor
+    layer?.backgroundColor = NSColor(white: 0.12, alpha: 0.65).cgColor
+    layer?.cornerRadius = 8
+    layer?.borderWidth = 1.0
+    layer?.borderColor = NSColor.white.withAlphaComponent(0.18).cgColor
 
     let placeholderAttributes: [NSAttributedString.Key: Any] = [
-      .foregroundColor: NSColor.white.withAlphaComponent(0.35),
-      .font: NSFont.systemFont(ofSize: 14, weight: .regular)
+      .foregroundColor: NSColor.white.withAlphaComponent(0.38),
+      .font: NSFont.systemFont(ofSize: 13, weight: .regular)
     ]
     placeholderAttributedString = NSAttributedString(
       string: "Enter emergency password",
@@ -107,15 +107,18 @@ private final class CustomSecureTextField: NSSecureTextField {
   func setFocused(_ focused: Bool) {
     NSAnimationContext.runAnimationGroup { context in
       context.duration = 0.15
+      layer?.backgroundColor = focused
+        ? NSColor(white: 0.14, alpha: 0.85).cgColor
+        : NSColor(white: 0.12, alpha: 0.65).cgColor
       layer?.borderColor = focused
-        ? NSColor(red: 1.0, green: 0.45, blue: 0.45, alpha: 0.85).cgColor
-        : NSColor.white.withAlphaComponent(0.22).cgColor
+        ? NSColor(red: 1.0, green: 0.42, blue: 0.42, alpha: 0.90).cgColor
+        : NSColor.white.withAlphaComponent(0.18).cgColor
     }
   }
 }
 
-/// Interactive frosted button with hover glow and pointing hand cursor.
-private final class DialogPillButton: NSControl {
+/// Interactive macOS-style action button with hover transitions.
+private final class DialogActionButton: NSControl {
   enum Variant {
     case primary
     case secondary
@@ -143,10 +146,10 @@ private final class DialogPillButton: NSControl {
 
   private func setup() {
     wantsLayer = true
-    layer?.cornerRadius = 10
+    layer?.cornerRadius = 7
     layer?.masksToBounds = true
 
-    label.font = .systemFont(ofSize: 13, weight: variant == .primary ? .semibold : .medium)
+    label.font = .systemFont(ofSize: 13, weight: variant == .primary ? .semibold : .regular)
     label.alignment = .center
     label.isEditable = false
     label.isSelectable = false
@@ -158,8 +161,8 @@ private final class DialogPillButton: NSControl {
     NSLayoutConstraint.activate([
       label.centerXAnchor.constraint(equalTo: centerXAnchor),
       label.centerYAnchor.constraint(equalTo: centerYAnchor),
-      label.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 8),
-      label.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -8),
+      label.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 14),
+      label.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -14),
     ])
 
     updateVisuals(hovered: false)
@@ -228,25 +231,25 @@ private final class DialogPillButton: NSControl {
       case .primary:
         label.textColor = .white
         if isPressed {
-          layer?.backgroundColor = NSColor(red: 0.75, green: 0.18, blue: 0.18, alpha: 1.0).cgColor
+          layer?.backgroundColor = NSColor(red: 0.78, green: 0.20, blue: 0.20, alpha: 1.0).cgColor
         } else {
           layer?.backgroundColor = hovered
-            ? NSColor(red: 0.95, green: 0.28, blue: 0.28, alpha: 1.0).cgColor
-            : NSColor(red: 0.85, green: 0.22, blue: 0.22, alpha: 0.95).cgColor
+            ? NSColor(red: 0.94, green: 0.28, blue: 0.28, alpha: 1.0).cgColor
+            : NSColor(red: 0.86, green: 0.22, blue: 0.22, alpha: 0.95).cgColor
         }
         layer?.borderWidth = 1.0
         layer?.borderColor = NSColor(red: 1.0, green: 0.45, blue: 0.45, alpha: hovered ? 0.9 : 0.6).cgColor
       case .secondary:
-        label.textColor = NSColor.white.withAlphaComponent(hovered ? 1.0 : 0.85)
+        label.textColor = NSColor.white.withAlphaComponent(hovered ? 1.0 : 0.88)
         if isPressed {
-          layer?.backgroundColor = NSColor.white.withAlphaComponent(0.25).cgColor
+          layer?.backgroundColor = NSColor.white.withAlphaComponent(0.20).cgColor
         } else {
           layer?.backgroundColor = hovered
-            ? NSColor.white.withAlphaComponent(0.18).cgColor
-            : NSColor.white.withAlphaComponent(0.10).cgColor
+            ? NSColor.white.withAlphaComponent(0.16).cgColor
+            : NSColor.white.withAlphaComponent(0.09).cgColor
         }
         layer?.borderWidth = 1.0
-        layer?.borderColor = NSColor.white.withAlphaComponent(hovered ? 0.35 : 0.20).cgColor
+        layer?.borderColor = NSColor.white.withAlphaComponent(hovered ? 0.30 : 0.16).cgColor
       }
     }
   }
@@ -267,8 +270,8 @@ final class EmergencyExitDialog: NSPanel, NSTextFieldDelegate {
 
   private let passwordField = CustomSecureTextField()
   private let errorLabel = NSTextField(labelWithString: "")
-  private var unlockButton: DialogPillButton!
-  private var cancelButton: DialogPillButton!
+  private var unlockButton: DialogActionButton!
+  private var cancelButton: DialogActionButton!
 
   static func show() {
     DispatchQueue.main.async {
@@ -297,8 +300,8 @@ final class EmergencyExitDialog: NSPanel, NSTextFieldDelegate {
   }
 
   init() {
-    let width: CGFloat = 430
-    let height: CGFloat = 290
+    let width: CGFloat = 440
+    let height: CGFloat = 280
     let rect = NSRect(x: 0, y: 0, width: width, height: height)
 
     super.init(
@@ -328,29 +331,29 @@ final class EmergencyExitDialog: NSPanel, NSTextFieldDelegate {
     isMovableByWindowBackground = true
     animationBehavior = .alertPanel
 
-    let container = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: 430, height: 290))
+    let container = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: 440, height: 280))
     container.material = .hudWindow
     container.blendingMode = .behindWindow
     container.state = .active
     container.wantsLayer = true
-    container.layer?.cornerRadius = 18
+    container.layer?.cornerRadius = 16
     container.layer?.masksToBounds = true
-    container.layer?.borderColor = NSColor.white.withAlphaComponent(0.20).cgColor
-    container.layer?.borderWidth = 1.2
+    container.layer?.borderColor = NSColor.white.withAlphaComponent(0.18).cgColor
+    container.layer?.borderWidth = 1.0
     contentView = container
 
-    // Icon container with soft red background glow
+    // Icon container badge
     let iconContainer = NSView()
     iconContainer.wantsLayer = true
-    iconContainer.layer?.cornerRadius = 22
-    iconContainer.layer?.backgroundColor = NSColor(red: 1.0, green: 0.32, blue: 0.32, alpha: 0.15).cgColor
-    iconContainer.layer?.borderColor = NSColor(red: 1.0, green: 0.35, blue: 0.35, alpha: 0.35).cgColor
+    iconContainer.layer?.cornerRadius = 20
+    iconContainer.layer?.backgroundColor = NSColor(red: 1.0, green: 0.32, blue: 0.32, alpha: 0.14).cgColor
+    iconContainer.layer?.borderColor = NSColor(red: 1.0, green: 0.35, blue: 0.35, alpha: 0.30).cgColor
     iconContainer.layer?.borderWidth = 1.0
     iconContainer.translatesAutoresizingMaskIntoConstraints = false
 
     let iconView = NSImageView()
     if #available(macOS 11.0, *) {
-      let config = NSImage.SymbolConfiguration(pointSize: 22, weight: .semibold)
+      let config = NSImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
       iconView.image = NSImage(
         systemSymbolName: "lock.shield.fill",
         accessibilityDescription: "Emergency Exit"
@@ -362,7 +365,7 @@ final class EmergencyExitDialog: NSPanel, NSTextFieldDelegate {
 
     // Title
     let title = NSTextField(labelWithString: "Emergency Exit")
-    title.font = .systemFont(ofSize: 19, weight: .bold)
+    title.font = .systemFont(ofSize: 18, weight: .bold)
     title.textColor = .white
     title.alignment = .center
     title.translatesAutoresizingMaskIntoConstraints = false
@@ -371,11 +374,11 @@ final class EmergencyExitDialog: NSPanel, NSTextFieldDelegate {
     let hasPassword = EmergencyPasswordStore.shared.hasPassword
     let desc = NSTextField(
       labelWithString: hasPassword
-        ? "Enter your emergency password to immediately stop protection and restore your screen."
+        ? "Enter your emergency password to stop protection and restore your screen."
         : "No password set. Authenticate with Touch ID or your Mac credentials to exit."
     )
     desc.font = .systemFont(ofSize: 13, weight: .regular)
-    desc.textColor = NSColor.white.withAlphaComponent(0.78)
+    desc.textColor = NSColor.white.withAlphaComponent(0.75)
     desc.alignment = .center
     desc.maximumNumberOfLines = 2
     desc.cell?.wraps = true
@@ -395,8 +398,8 @@ final class EmergencyExitDialog: NSPanel, NSTextFieldDelegate {
     errorLabel.translatesAutoresizingMaskIntoConstraints = false
     errorLabel.stringValue = ""
 
-    // Buttons
-    cancelButton = DialogPillButton(
+    // Action buttons (aligned to the extreme right side)
+    cancelButton = DialogActionButton(
       title: "Cancel",
       variant: .secondary,
       target: self,
@@ -404,7 +407,7 @@ final class EmergencyExitDialog: NSPanel, NSTextFieldDelegate {
     )
     cancelButton.translatesAutoresizingMaskIntoConstraints = false
 
-    unlockButton = DialogPillButton(
+    unlockButton = DialogActionButton(
       title: hasPassword ? "Unlock & Stop" : "Authenticate & Exit",
       variant: .primary,
       target: self,
@@ -422,10 +425,10 @@ final class EmergencyExitDialog: NSPanel, NSTextFieldDelegate {
 
     NSLayoutConstraint.activate([
       // Icon
-      iconContainer.topAnchor.constraint(equalTo: container.topAnchor, constant: 22),
+      iconContainer.topAnchor.constraint(equalTo: container.topAnchor, constant: 20),
       iconContainer.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-      iconContainer.widthAnchor.constraint(equalToConstant: 44),
-      iconContainer.heightAnchor.constraint(equalToConstant: 44),
+      iconContainer.widthAnchor.constraint(equalToConstant: 40),
+      iconContainer.heightAnchor.constraint(equalToConstant: 40),
 
       iconView.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
       iconView.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
@@ -436,29 +439,29 @@ final class EmergencyExitDialog: NSPanel, NSTextFieldDelegate {
 
       // Description
       desc.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 6),
-      desc.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 28),
-      desc.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -28),
+      desc.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 24),
+      desc.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -24),
 
-      // Password Field
+      // Password Field (refined width & padding)
       passwordField.topAnchor.constraint(equalTo: desc.bottomAnchor, constant: 16),
-      passwordField.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 36),
-      passwordField.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -36),
-      passwordField.heightAnchor.constraint(equalToConstant: 38),
+      passwordField.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 28),
+      passwordField.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -28),
+      passwordField.heightAnchor.constraint(equalToConstant: 36),
 
       // Error Label
       errorLabel.topAnchor.constraint(equalTo: passwordField.bottomAnchor, constant: 6),
       errorLabel.centerXAnchor.constraint(equalTo: container.centerXAnchor),
 
-      // Buttons
-      cancelButton.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -20),
-      cancelButton.trailingAnchor.constraint(equalTo: container.centerXAnchor, constant: -6),
-      cancelButton.widthAnchor.constraint(equalToConstant: 110),
-      cancelButton.heightAnchor.constraint(equalToConstant: 36),
-
+      // Buttons (shifted to the extreme right side)
       unlockButton.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -20),
-      unlockButton.leadingAnchor.constraint(equalTo: container.centerXAnchor, constant: 6),
-      unlockButton.widthAnchor.constraint(equalToConstant: 160),
-      unlockButton.heightAnchor.constraint(equalToConstant: 36),
+      unlockButton.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -24),
+      unlockButton.heightAnchor.constraint(equalToConstant: 32),
+      unlockButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 140),
+
+      cancelButton.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -20),
+      cancelButton.trailingAnchor.constraint(equalTo: unlockButton.leadingAnchor, constant: -10),
+      cancelButton.heightAnchor.constraint(equalToConstant: 32),
+      cancelButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 80),
     ])
   }
 
