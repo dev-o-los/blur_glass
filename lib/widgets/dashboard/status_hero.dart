@@ -55,6 +55,16 @@ class StatusHero extends StatelessWidget {
           isPulsing: isProtecting,
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 250),
+            layoutBuilder: (currentChild, previousChildren) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  ...previousChildren
+                      .where((child) => child.key != currentChild?.key),
+                  ?currentChild,
+                ],
+              );
+            },
             child: Icon(
               _heroIcon,
               key: ValueKey(_heroIcon),
@@ -66,6 +76,16 @@ class StatusHero extends StatelessWidget {
         const SizedBox(height: 16),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
+          layoutBuilder: (currentChild, previousChildren) {
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                ...previousChildren
+                    .where((child) => child.key != currentChild?.key),
+                ?currentChild,
+              ],
+            );
+          },
           child: Text(
             _title,
             key: ValueKey(_title),
