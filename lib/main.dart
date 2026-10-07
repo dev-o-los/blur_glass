@@ -78,7 +78,7 @@ class _RootState extends State<_Root> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.of(context).canvas,
+      backgroundColor: Colors.transparent,
       body: StreamBuilder<AppPhase>(
         stream: _controller.phase,
         initialData: _controller.currentPhase,
@@ -105,26 +105,36 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Center(
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xEB232734),
+            Color(0xF2181B25),
+          ],
+        ),
+      ),
+      child: const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            HaloRings(
-              size: 132,
-              child: const BrandMark(size: 56),
+            SizedBox(
+              width: 38,
+              height: 38,
+              child: BrandMark(size: 38),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'Connecting to the Blur Glass agent…',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            const SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
+            SizedBox(height: 14),
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Color(0xFF007AFF),
+              ),
             ),
           ],
         ),

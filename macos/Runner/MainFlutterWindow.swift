@@ -3,62 +3,94 @@ import FlutterMacOS
 
 class MainFlutterWindow: NSWindow, NSWindowDelegate {
   override func awakeFromNib() {
+    super.awakeFromNib()
+
     let flutterViewController = FlutterViewController()
-    let windowFrame = self.frame
     self.contentViewController = flutterViewController
-    self.setFrame(windowFrame, display: true)
     self.title = "Blur Glass"
 
-    // Liquid glass: the window is transparent and an NSVisualEffectView
-    // behind the Flutter surface blurs whatever is beneath it — the desktop
-    // wallpaper and any windows below. darkAqua keeps the material dark
-    // regardless of the system appearance (the app is dark-only).
-    let vibrancy = NSVisualEffectView(
-      frame: NSRect(origin: .zero, size: windowFrame.size)
-    )
-    vibrancy.material = .underWindowBackground
-    vibrancy.blendingMode = .behindWindow
-    vibrancy.state = .active
-    vibrancy.autoresizingMask = [.width, .height]
-    contentView?.addSubview(vibrancy, positioned: .below, relativeTo: nil)
+    let windowWidth: CGFloat = 420
+    let windowHeight: CGFloat = 228
 
+    // Prevent macOS from restoring any old/large window frames
+    self.isRestorable = false
+    self.setFrameAutosaveName("")
+    UserDefaults.standard.removeObject(forKey: "NSWindow Frame Blur Glass")
+
+    // Configure window appearance
     self.titlebarAppearsTransparent = true
-    // Frameless look: the Flutter sidebar paints flush behind the traffic
-    // lights, exactly like the product mock.
     self.titleVisibility = .hidden
     self.styleMask.insert(.fullSizeContentView)
+    self.styleMask.insert(.resizable)
     self.isOpaque = false
     self.backgroundColor = .clear
+    self.hasShadow = true
     self.isMovableByWindowBackground = true
-    self.minSize = NSSize(width: 640, height: 520)
+
+    // Initial size and minimum/maximum adjustable bounds
+    self.minSize = NSSize(width: 380, height: 215)
+    self.maxSize = NSSize(width: 1200, height: 1000)
+    self.setContentSize(NSSize(width: windowWidth, height: windowHeight))
+    self.setFrame(
+      NSRect(
+        x: self.frame.origin.x,
+        y: self.frame.origin.y,
+        width: windowWidth,
+        height: windowHeight
+      ),
+      display: true,
+      animate: false
+    )
+
+    self.standardWindowButton(.zoomButton)?.isEnabled = true
+    self.standardWindowButton(.zoomButton)?.isHidden = false
+
     self.delegate = self
+    self.center()
 
     // --- Transparent Flutter surface -------------------------------------
-    // FlutterView reports isOpaque == true, which tells AppKit to composite
-    // its metal surface WITHOUT alpha — a black rectangle that hides any
-    // vibrancy behind it. Clearing the layer is not enough; the view-level
-    // opaque flag must go. Replace the isOpaque implementation on the
-    // Flutter view's runtime class only (safe: no global swizzling).
     makeFlutterSurfaceTransparent(flutterViewController.view)
     if let layer = flutterViewController.view.layer {
       layer.isOpaque = false
       layer.backgroundColor = NSColor.clear.cgColor
     }
-    // Some Flutter versions host the metal surface in a sublayer; clear those
-    // too so nothing paints as an opaque black plane.
     clearOpaqueMetalLayers(flutterViewController.view.layer)
     contentView?.layer?.backgroundColor = NSColor.clear.cgColor
     // ----------------------------------------------------------------------
 
     RegisterGeneratedPlugins(registry: flutterViewController)
     PrivacyPlugin.register(with: flutterViewController.registrar(forPlugin: "PrivacyPlugin"))
-
-    super.awakeFromNib()
+    setupWindowChannel(with: flutterViewController)
   }
 
-  /// Replaces `-[<FlutterView class> isOpaque]` with an implementation that
-  /// returns false. Uses the view's actual runtime class, so this works even
-  /// if Flutter renames the class in a future release.
+  private func setupWindowChannel(with controller: FlutterViewController) {
+    let channel = FlutterMethodChannel(name: "blur_glass/window", binaryMessenger: controller.engine.binaryMessenger)
+    channel.setMethodCallHandler { [weak self] (call, result) in
+      guard let self = self else {
+        result(nil)
+        return
+      }
+      if call.method == "setWindowSize",
+         let args = call.arguments as? [String: Any],
+         let width = args["width"] as? Double,
+         let height = args["height"] as? Double {
+        let animate = (args["animate"] as? Bool) ?? true
+        self.resizeWindow(to: NSSize(width: CGFloat(width), height: CGFloat(height)), animated: animate)
+        result(true)
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  private func resizeWindow(to newSize: NSSize, animated: Bool) {
+    var frame = self.frame
+    let heightDiff = frame.size.height - newSize.height
+    frame.origin.y += heightDiff
+    frame.size = newSize
+    self.setFrame(frame, display: true, animate: animated)
+  }
+
   private func makeFlutterSurfaceTransparent(_ view: NSView) {
     guard let viewClass = object_getClass(view) else { return }
     let opaqueSelector = #selector(getter: NSView.isOpaque)
@@ -81,7 +113,6 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
   }
 
   func windowShouldClose(_ sender: NSWindow) -> Bool {
-    sender.orderOut(nil)
-    return false
+    return true
   }
 }

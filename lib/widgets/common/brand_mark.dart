@@ -34,13 +34,17 @@ class BrandMark extends StatelessWidget {
         ],
       ),
       child: CustomPaint(
-        painter: _ApertureIrisPainter(),
+        painter: ApertureIrisPainter(),
       ),
     );
   }
 }
 
-class _ApertureIrisPainter extends CustomPainter {
+class ApertureIrisPainter extends CustomPainter {
+  const ApertureIrisPainter({this.color = Colors.white});
+
+  final Color color;
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -49,10 +53,10 @@ class _ApertureIrisPainter extends CustomPainter {
     final ringPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = size.width * 0.04
-      ..color = Colors.white.withValues(alpha: 0.25);
+      ..color = color.withValues(alpha: 0.25);
     canvas.drawCircle(center, radius * 0.76, ringPaint);
 
-    final dotPaint = Paint()..color = Colors.white;
+    final dotPaint = Paint()..color = color;
     const dotCount = 8;
     for (int i = 0; i < dotCount; i++) {
       final angle = (i * 2 * math.pi / dotCount) - (math.pi / 2);
@@ -72,13 +76,14 @@ class _ApertureIrisPainter extends CustomPainter {
       canvas.drawCircle(
         sparklePos,
         radius * 0.055,
-        dotPaint..color = Colors.white.withValues(alpha: 0.9),
+        dotPaint..color = color.withValues(alpha: 0.9),
       );
     }
 
-    canvas.drawCircle(center, radius * 0.14, dotPaint..color = Colors.white);
+    canvas.drawCircle(center, radius * 0.14, dotPaint..color = color);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant ApertureIrisPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
