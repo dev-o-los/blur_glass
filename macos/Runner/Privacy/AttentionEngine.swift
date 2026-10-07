@@ -6,8 +6,8 @@ struct PrivacyConfig {
   var unlockMs: Double = 350
   var noFaceLockMs: Double = 500
   var extraFaceLockMs: Double = 150
-  var strangerLockMs: Double = 200
-  var matchDistance: Float = 0.72
+  var strangerLockMs: Double = 150
+  var matchDistance: Float = 0.45
 }
 
 enum ShieldReason: String {
@@ -58,12 +58,16 @@ final class AttentionEngine {
 
   private var lockStarted: Date?
   private var unlockStarted: Date?
+  private var noFaceStartTime: Date?
+  private var isDepartureLocked: Bool = false
   private var currentLocked = true
   private var lastReason: ShieldReason = .idle
 
   func reset() {
     lockStarted = nil
     unlockStarted = nil
+    noFaceStartTime = nil
+    isDepartureLocked = false
     currentLocked = true
     lastReason = .idle
   }
@@ -76,6 +80,17 @@ final class AttentionEngine {
     let distance = primary?.ownerDistance
     let ownerMatch = hasOwnerTemplate && distance != nil && distance! <= config.matchDistance
 
+    // Track when owner has stepped away (no face detected for >= 3 seconds)
+    if count == 0 {
+      if noFaceStartTime == nil {
+        noFaceStartTime = now
+      } else if now.timeIntervalSince(noFaceStartTime!) >= 3.0 {
+        isDepartureLocked = true
+      }
+    } else {
+      noFaceStartTime = nil
+    }
+
     let desired: ShieldReason
     var message: String
 
@@ -87,13 +102,20 @@ final class AttentionEngine {
       message = "No face in view. Screen hidden."
     } else if hasOwnerTemplate && !ownerMatch {
       desired = .stranger
-      message = "Face does not match the enrolled owner. Screen hidden."
+      message = isDepartureLocked
+          ? "Stranger detected while owner is away. Screen locked."
+          : "Face does not match the enrolled owner. Screen hidden."
+    } else if !hasOwnerTemplate {
+      // If no owner face template exists, do NOT unblur for an arbitrary face
+      desired = .stranger
+      message = "Owner face not enrolled. Enroll in Settings to enable unblurring."
     } else if lookingAway(yaw: yaw, pitch: pitch) {
       desired = .lookAway
       message = "Looking away. Screen hidden."
     } else {
       desired = .owner
       message = "Owner looking at the screen."
+      isDepartureLocked = false
     }
 
     let shouldLock = desired != .owner

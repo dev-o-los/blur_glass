@@ -108,11 +108,14 @@ final class CameraFaceMonitor: NSObject, AVCaptureVideoDataOutputSampleBufferDel
   }
 
   private func clampedBox(_ box: CGRect) -> CGRect {
-    let x = min(max(box.origin.x, 0), 1)
-    let y = min(max(box.origin.y, 0), 1)
-    let w = min(max(box.width, 0.02), 1 - x)
-    let h = min(max(box.height, 0.02), 1 - y)
-    return CGRect(x: x, y: y, width: w, height: h)
+    // Add 15% margin around face landmarks so the entire facial contour and structure are captured
+    let marginX = box.width * 0.15
+    let marginY = box.height * 0.15
+    let x = max(0.0, box.origin.x - marginX)
+    let y = max(0.0, box.origin.y - marginY)
+    let w = min(1.0 - x, box.width + 2 * marginX)
+    let h = min(1.0 - y, box.height + 2 * marginY)
+    return CGRect(x: x, y: y, width: max(0.02, w), height: max(0.02, h))
   }
 
   private func radiansToDegrees(_ value: Double?) -> Double? {
