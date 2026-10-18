@@ -1,0 +1,3 @@
+Meet Blur Glass: an on-device macOS app that instantly frosts your entire screen the millisecond someone looks over your shoulder or you look away.
+
+No cloud telemetry, biometrics encrypted in your Keychain, and zero compromise privacy.

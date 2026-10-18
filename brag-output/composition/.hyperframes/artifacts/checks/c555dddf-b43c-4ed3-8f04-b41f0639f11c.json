@@ -1,0 +1,193 @@
+{
+  "ok": false,
+  "strict": false,
+  "browserSkipped": true,
+  "lint": {
+    "ok": false,
+    "errorCount": 1,
+    "warningCount": 7,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "css_transition_used",
+        "severity": "warning",
+        "message": "CSS declaration `transition: background 0.2s ease` runs on the browser clock and cannot be seeked deterministically across render workers.",
+        "selector": ".mac-switch",
+        "dataAttributes": {},
+        "sourceFile": "/Users/utkarsh/Documents/blur_glass/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Keep the class or attribute swap for state; put the visual change on the paused GSAP timeline."
+      },
+      {
+        "code": "audio_volume_tween_overrides_gain",
+        "severity": "warning",
+        "message": "#bg-music has data-volume=\"0.28\" (-11.1 dB) and a GSAP tween on `volume`. Tween values are absolute: they REPLACE this gain rather than scale it, so wherever the tween names a value the clip plays at that value, not at -11.1 dB.",
+        "selector": "#bg-music",
+        "dataAttributes": {},
+        "sourceFile": "/Users/utkarsh/Documents/blur_glass/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Write the tween's targets in the same absolute gain (e.g. `volume: 1.95`, not `volume: 1`), or reset data-volume to 1 and let the tween carry the level on its own."
+      },
+      {
+        "code": "gsap_css_transform_conflict",
+        "severity": "error",
+        "message": "\"#mac-switch .switch-thumb\" has CSS `transform: translateX(20px)` and a GSAP tween animates x. GSAP will overwrite the full CSS transform, discarding any translateX(-50%) centering or CSS scale value.",
+        "selector": "#mac-switch .switch-thumb",
+        "dataAttributes": {},
+        "sourceFile": "/Users/utkarsh/Documents/blur_glass/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove `transform: translateX(20px)` from CSS and replace with GSAP properties: x: 20. Example: tl.fromTo('#mac-switch .switch-thumb', { x: 20 }, { x: 20, ...yourAnimation }). tl.fromTo is exempt from this rule."
+      },
+      {
+        "code": "composition_file_too_large",
+        "severity": "warning",
+        "message": "This HTML composition file has 368 lines. Smaller sub-compositions are easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/Users/utkarsh/Documents/blur_glass/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Split coherent scenes or layers into separate .html files under compositions/, then mount them from the parent with data-composition-src so each file stays small enough to inspect, revise, and validate independently."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-1\"> is a timeline element that contains nested <div id=\"hook-badge\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-1",
+        "dataAttributes": {},
+        "sourceFile": "/Users/utkarsh/Documents/blur_glass/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-1\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-desktop\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-desktop",
+        "dataAttributes": {},
+        "sourceFile": "/Users/utkarsh/Documents/blur_glass/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-desktop\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-specs\"> is a timeline element that contains nested <h2>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-specs",
+        "dataAttributes": {},
+        "sourceFile": "/Users/utkarsh/Documents/blur_glass/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-specs\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-outro\"> is a timeline element that contains nested <div id=\"outro-mark\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-outro",
+        "dataAttributes": {},
+        "sourceFile": "/Users/utkarsh/Documents/blur_glass/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-outro\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      }
+    ],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 0,
+    "samples": [],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [],
+    "checked": 0,
+    "passed": 0
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}
